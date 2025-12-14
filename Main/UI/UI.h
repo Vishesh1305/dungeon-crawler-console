@@ -42,7 +42,7 @@ public:
     
     static void UI_DisplayHealthBar(unsigned short int current, unsigned short int max);
     static void UI_DisplayExperienceBar(unsigned short int current, unsigned short int max);
-    
+    static void UI_DisplayLoadingBar();
     //--------------------
     // ANIMATION FUNCTIONS
     //--------------------
@@ -52,4 +52,21 @@ public:
     static void UI_DisplayVictoryScreen(Player* player, GameStats* stats);
     static void UI_DisplayDefeatScreen(Player* player, GameStats* stats);
     static void UI_DisplayGameoverScreen(Player* player, GameStats* stats);
+    
+    //--------------------
+    // TIMING FUNCTIONS
+    //--------------------
+    
+    static void UI_PauseScreen();
+    static void UI_TimedPause(unsigned short milliseconds);
+    
+    //--------------------
+    // MESSAGE DISPLAY FUNCTIONS
+    //--------------------
+    
+    static void UI_DisplaySuccessMessage(const char* message);
+    static void UI_DisplayErrorMessage(const char* message);
+    static void UI_DisplayWarningMessage(const char* message);
+    static void UI_DisplayInfoMessage(const char* message);
+
 };

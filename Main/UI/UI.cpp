@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <windows.h>
 
 //--------------------
 // PRINT FUNCTIONS
@@ -63,7 +64,7 @@ unsigned short UI::UI_GetMenuInput(short int minChoice, short int maxChoice)
     while (true)
     {
         printf("> ");
-        if (scanf_s("%d", &choice) != 1)
+        if (scanf_s("%hd", &choice) != 1)
         {
             while (getchar() != '\n') {}
             printf("Invalid Input. Try Again: ");
@@ -171,13 +172,110 @@ void UI::UI_DisplayExperienceBar(unsigned short int current, unsigned short int 
     printf("] %.0f%%\n", percent*100);
 }
 
-void UI::UI_DisplayLevelUpAnimation(unsigned short oldLevel, unsigned short newLevel)
+void UI::UI_DisplayLoadingBar()
 {
+    printf("[");
+    for (unsigned short i = 0; i < 20; i++)
+    {
+        printf("=");
+        fflush(stdout);
+        UI_TimedPause(50);
+    }
+    printf("]100%%\n");
 }
+
 
 //--------------------
 // ANIMATION FUNCTIONS
 //--------------------
+
+void UI::UI_DisplayLevelUpAnimation(unsigned short oldLevel, unsigned short newLevel)
+{
+    CLEAR_SCREEN();
+    printf("\n\n");
+    UI_PrintCentered("======================================");
+    UI_PrintCentered("*** LEVEL UP! ***");
+    printf(" Level %d -> Level %d\n", oldLevel, newLevel);
+    UI_PrintCentered("======================================");
+    printf("\n\n");
+    
+}
+
+void UI::UI_DisplayCombatAnimation(const char* action, unsigned short damage, bool isCritical)
+{
+    if (isCritical)
+    {
+        printf("%s >>> CRITICAL HIT <<< \n%s", RED, RESET);
+    }
+    printf("%s Dealt %d Damage!\n", action, damage);
+}
+
+void UI::UI_DisplayVictoryScreen(Player* player, GameStats* stats)
+{
+    CLEAR_SCREEN();
+    UI_PrintHeader("VICTORY!");
+    printf("\n");
+    printf("You defeated the final boss!\n");
+    printf("Final Level: %d\n", player->level);
+    printf("Final Gold: %d\n", player->gold);
+    printf("Enemies Defeated: %d\n\n", stats->totalEnemiesDefeated);
+}
+
+void UI::UI_DisplayDefeatScreen(Player* player, GameStats* stats)
+{
+    CLEAR_SCREEN();
+    UI_PrintHeader("DEALT DEFEAT!");
+    printf("\n");
+    printf("You have been defeated!\n");
+    printf("Final Level: %d\n", player->level);
+    printf("Final Gold: %d\n", player->gold);
+    printf("Enemies Defeated: %d\n", stats->totalEnemiesDefeated);
+}
+void UI::UI_DisplayGameoverScreen(Player* player, GameStats* stats)
+{
+    UI_DisplayDefeatScreen(player, stats);
+}
+
+//--------------------
+// TIMING FUNCTIONS
+//--------------------
+
+void UI::UI_PauseScreen()
+{
+    printf("\nPress ENTER to continue...");
+    getchar();
+}
+
+void UI::UI_TimedPause(unsigned short milliseconds)
+{
+    Sleep(milliseconds);
+}
+
+//--------------------
+// MESSAGE DISPLAY FUNCTIONS
+//--------------------
+
+void UI::UI_DisplaySuccessMessage(const char* message)
+{
+    printf("%s[SUCCESS]%s%s\n", GREEN, RESET, message);
+}
+
+void UI::UI_DisplayErrorMessage(const char* message)
+{
+    printf("%s[ERROR]%s%s\n", RED, RESET, message);
+}
+
+void UI::UI_DisplayWarningMessage(const char* message)
+{
+    printf("%s[WARNING]%s%s\n", YELLOW, RESET, message);
+}
+
+void UI::UI_DisplayInfoMessage(const char* message)
+{
+    printf("%s[INFO]%s%s\n", CYAN, RESET, message);
+}
+
+
 
 
 
