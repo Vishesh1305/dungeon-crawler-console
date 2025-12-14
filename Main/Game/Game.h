@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
-#include <ctime>
+#include <cstring>
 
 //--------------------
 // COLOR CODES FOR TERMINAL
@@ -291,5 +291,16 @@ struct GameInstance
     bool isRunning;
 };
 
+//--------------------
+// GAME FUNCTION PROTOTYPES
+//--------------------
 
+GameInstance* GameInit();
+void GameFree(GameInstance* game);
+void GameRun(GameInstance* game);
+GameState GameShowMainMenu();
+void GameHandleCharacterCreation(GameInstance* game);
+void GameHandleGameDifficultySelection(GameInstance* game);
+void GameHandleGameLoop(GameInstance* game);
+void GameHandlePauseMenu(GameInstance* game);
 #endif
