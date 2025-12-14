@@ -1,0 +1,293 @@
+﻿#ifndef GAME_H
+#define GAME_H
+
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
+#include <ctime>
+
+//--------------------
+// COLOR CODES FOR TERMINAL
+//--------------------
+
+#define RED "\x1b[31m"
+#define GREEN "\x1b[32m"
+#define YELLOW "\x1b[33m"
+#define BLUE "\x1b[34m"
+#define MAGENTA "\x1b[35m"
+#define CYAN "\x1b[36m"
+#define RESET "\x1b[0m"
+
+//--------------------
+// Clearing Screen
+//--------------------
+
+#define CLEAR_SCREEN() system("cls")
+
+//--------------------
+// CONSTANTS
+//--------------------
+
+#define MAX_NAME_LENGTH 50  // NOLINT(modernize-macro-to-enum)
+#define MAX_DESCRIPTION_LENGTH 200 // NOLINT(modernize-macro-to-enum)
+#define MAX_STRING_LENGTH 256 // NOLINT(modernize-macro-to-enum)
+#define MAX_ABILITIES 15 // NOLINT(modernize-macro-to-enum)
+#define MAX_ROOMS 20 // NOLINT(modernize-macro-to-enum)
+#define MAX_QUESTS 20 // NOLINT(modernize-macro-to-enum)
+#define MAX_INVENTORY 50 // NOLINT(modernize-macro-to-enum)
+#define MAX_ENEMIES 10 // NOLINT(modernize-macro-to-enum)
+#define DUNGEON_ROWS 5 // NOLINT(modernize-macro-to-enum)
+#define DUNGEON_COLS 4 // NOLINT(modernize-macro-to-enum)
+//--------------------
+// ENUMS
+//--------------------
+
+typedef enum  // NOLINT(performance-enum-size)
+{
+    EASY = 0,
+    MEDIUM = 1,
+    HARD = 2,
+    INSANE = 3,
+    
+}DifficultyLevel;
+
+typedef enum
+{
+    WEAPON = 0,
+    ARMOR = 1,
+    POTION = 2,
+    
+}ItemType;
+
+typedef enum
+{
+    COMMON = 0,
+    UNCOMMON = 1,
+    RARE = 2,
+    LEGENDARY = 3,
+    
+}ItemRarity;
+
+typedef enum
+{
+    POISON = 0,
+    STUN = 1,
+    BLEED = 2,
+    FORTIFIED = 3,
+    WEAKENED = 4
+
+}StatusEffectType;
+
+typedef enum
+{
+    EMPTY = 0,
+    ENEMY = 1,
+    TREASURE = 2,
+    QUEST = 3,
+    BOSS = 4
+    
+}EncounterType;
+
+typedef enum
+{
+    NORTH = 0,
+    EAST = 1,
+    SOUTH = 2,
+    WEST = 3,
+}Direction;
+
+typedef enum
+{
+    MAIN_MENU = 0,
+    CHARACTER_CREATION = 1,
+    DIFFICULTY_SELECT = 2,
+    NEW_GAME = 3, 
+    GAME_LOOP = 4,
+    PAUSE_MENU = 5,
+    GAME_OVER = 6,
+    LOAD_GAME = 7
+    
+}GameState;
+
+typedef enum
+{
+    KILL_ENEMIES = 0,
+    COLLECT_ITEMS = 1,
+    REACH_LEVEL = 2,
+    
+}QuestObjectiveType;
+
+typedef enum
+{
+    TRAIT_HEAVY_ARMOUR = 0,
+    TRAIT_QUICK_HANDS = 1,
+    TRAIT_FORTUNATE = 2,
+    TRAIT_SCHOLARLY = 3,
+    TRAIT_BEAST_MASTER = 4
+    
+}PlayerTrait;
+
+typedef enum
+{
+    COMBAT_VICTORY = 0,
+    COMBAT_DEFEAT = 1,
+    COMBAT_ESCAPE = 2,
+    
+}CombatResult;
+
+//--------------------
+// STRUCTS
+//--------------------
+
+typedef struct StatusEffect
+{
+    StatusEffectType type;
+    int duration;
+    int damagePerItem;
+}StatusEffect;
+
+//
+typedef struct Ability
+{
+    int abilityId;
+    char name[MAX_NAME_LENGTH];
+    char description[MAX_DESCRIPTION_LENGTH];
+    int unlockedAtLevel;
+    float damageMultiplier;
+    int cooldown;
+    int cooldownRemaining;
+}Ability;
+
+//Player Struct
+typedef struct Player
+{
+    char name[MAX_NAME_LENGTH];
+    short health;
+    short maxHealth;
+    short attack;
+    short defense;
+    short exp;
+    short level;
+    int gold;
+    short currentRoom;
+    PlayerTrait trait;
+    float goldMultiplier;
+    float expMultiplier;
+    StatusEffect statusEffect[10];
+    short statusEffectCount;
+    Ability unlockedAbilities[MAX_ABILITIES];
+    short abilityCount;
+    bool canCharmEnemies;
+    DifficultyLevel difficulty;
+}Player;
+//Enemy Struct
+
+typedef struct Enemy
+{
+    short enemyID;
+    char name[MAX_NAME_LENGTH];
+    short baseHealth;
+    short health;
+    short attack;
+    short defense;
+    short expReward;
+    short goldReward;
+    short difficulty;
+    ItemRarity lootRarity;
+    StatusEffect statusEffect[10];
+    short statusEffectCount;
+}Enemy;
+//Item struct - data
+typedef struct ItemData
+{
+    short itemID;
+    char name[MAX_NAME_LENGTH];
+    char description[MAX_DESCRIPTION_LENGTH];
+    ItemRarity rarity;
+    ItemType type;
+    short value;
+    short cost;
+    short quantity;
+    
+}Item;
+
+typedef struct InventoryNode
+{
+    Item item;
+    struct InventoryNode* next;
+}InventoryNode;
+
+typedef struct Inventory
+{
+    InventoryNode* head;
+    short itemCount;
+}Inventory;
+
+typedef struct Room
+{
+    short roomID;
+    char description[MAX_DESCRIPTION_LENGTH];
+    EncounterType encounterType;
+    short connections[4];
+    bool hasShop;
+    bool hasBoss;
+    bool explored;
+}Room;
+
+typedef struct Dungeon
+{
+    Room rooms[MAX_ROOMS];
+    short totalRooms;
+}Dungeon;
+
+typedef struct QuestData  // NOLINT(clang-diagnostic-padded)
+{
+    short questID;
+    char title[MAX_NAME_LENGTH];
+    char description[MAX_DESCRIPTION_LENGTH];
+    QuestObjectiveType objectiveType;
+    short targetValue;
+    short currentProgress;
+    short rewardGold;
+    bool completed;
+}Quest;
+
+typedef struct QuestLog
+{
+    Quest quests[MAX_QUESTS];
+}QuestLog;
+
+typedef struct Shop
+{
+    Item items[MAX_INVENTORY];
+    short itemCount;
+}Shop;
+
+typedef struct GameStatistics
+{
+    short totalEnemiesDefeated;
+    short totalGoldEarned;
+    short totalDamageDealt;
+    short totalDamageTaken;
+    short itemsCollected;
+    short questsCompleted;
+    short totalPlaytime;
+    short deathCount;
+}GameStats;
+
+struct GameInstance
+{
+    GameState currentState;
+    Player* player;
+    Dungeon* dungeon;
+    Inventory* inventory;
+    QuestLog* questLog;
+    Shop* shop;
+    GameStats* stats;
+    Enemy enemyList[MAX_ENEMIES];
+    short enemyCount;
+    Ability abilityList[MAX_ABILITIES];
+    short abilityCount;
+    bool isRunning;
+};
+#endif
