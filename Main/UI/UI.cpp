@@ -1,6 +1,5 @@
 ﻿#include "UI.h"
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
 #include <windows.h>
 

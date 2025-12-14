@@ -290,4 +290,6 @@ struct GameInstance
     short abilityCount;
     bool isRunning;
 };
+
+
 #endif
