@@ -191,3 +191,34 @@ void GameHandlePauseMenu(GameInstance* game)
 //--------------------
 // PLAYER FUNCTIONS
 //--------------------
+
+Player* PlayerCreate()
+{
+    Player* player = (Player*)calloc(1, sizeof(Player));
+    
+    if (player == nullptr)
+    {
+        printf("ERROR 03: Failed to allocate memory for player.\nExiting.\n");
+        return nullptr;
+    }
+    
+    player->goldMultiplier = 1.0f;
+    player->expMultiplier = 1.0f;
+    
+    // Every thing else is already set to 0 because of calloc.
+    
+    return player;
+}
+
+void PlayerInitStats(Player* player)
+{
+    player->health = STARTING_HEALTH;
+    player->maxHealth = STARTING_HEALTH;
+    player->attack = STARTING_ATTACK;
+    player->defense = STARTING_DEFENCE;
+    player->exp = STARTING_XP;
+    player->level = 1;
+    player->gold = STARTING_GOLD;
+    player->currentRoom = 0;
+    
+}

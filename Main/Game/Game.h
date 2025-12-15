@@ -38,6 +38,17 @@
 #define MAX_ENEMIES 10 // NOLINT(modernize-macro-to-enum)
 #define DUNGEON_ROWS 5 // NOLINT(modernize-macro-to-enum)
 #define DUNGEON_COLS 4 // NOLINT(modernize-macro-to-enum)
+
+//--------------------
+// PLAYER STARTING STATS
+//--------------------
+
+#define STARTING_HEALTH 100  // NOLINT(modernize-macro-to-enum)
+#define STARTING_ATTACK 10  // NOLINT(modernize-macro-to-enum)
+#define STARTING_DEFENCE 5  // NOLINT(modernize-macro-to-enum)
+#define STARTING_GOLD 50  // NOLINT(modernize-macro-to-enum)
+#define STARTING_XP 0  // NOLINT(modernize-macro-to-enum)
+
 //--------------------
 // ENUMS
 //--------------------
@@ -161,24 +172,24 @@ typedef struct Ability
 //Player Struct
 typedef struct Player
 {
-    char name[MAX_NAME_LENGTH];
-    short health;
-    short maxHealth;
-    short attack;
-    short defense;
-    short exp;
-    short level;
-    int gold;
-    short currentRoom;
-    PlayerTrait trait;
-    float goldMultiplier;
-    float expMultiplier;
-    StatusEffect statusEffect[10];
-    short statusEffectCount;
-    Ability unlockedAbilities[MAX_ABILITIES];
-    short abilityCount;
-    bool canCharmEnemies;
-    DifficultyLevel difficulty;
+    char name[MAX_NAME_LENGTH]; // Character creation
+    short health; // InitStats
+    short maxHealth;// InitStats
+    short attack;// InitStats
+    short defense;// InitStats
+    short exp;// InitStats
+    short level;// InitStats
+    int gold;// InitStats
+    short currentRoom; // InitStats
+    PlayerTrait trait; // Character creation
+    float goldMultiplier;//PlayerCreate()
+    float expMultiplier; //PlayerCreate()
+    StatusEffect statusEffect[10]; 
+    short statusEffectCount; //PlayerCreate()
+    Ability unlockedAbilities[MAX_ABILITIES];  // NOLINT(clang-diagnostic-padded)
+    short abilityCount; //PlayerCreate()
+    bool canCharmEnemies; //PlayerCreate()
+    DifficultyLevel difficulty; // Difficulty select
 }Player;
 //Enemy Struct
 
