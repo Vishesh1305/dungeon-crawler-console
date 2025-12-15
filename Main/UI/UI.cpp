@@ -31,8 +31,21 @@ void UI::UI_PrintDivider()
 void UI::UI_PrintSection(const char* name)
 {
     printf("\n--- %s ", name);
-    unsigned short remaining = 35 - static_cast<unsigned short>(strlen(name)) - 4;
-    for (unsigned short i = 0; i < remaining; i++) printf("-");
+    
+    unsigned short nameLen = static_cast<unsigned short>(strlen(name));
+    unsigned short totalWidth = 35;
+    
+    if (nameLen >= totalWidth - 4)
+    {
+        printf("---\n");
+        return;
+    }
+    
+    unsigned short remaining = totalWidth - nameLen - 4;
+    
+    for (unsigned short i = 0; i < remaining; i++) 
+        printf("-");
+    
     printf("\n");
 }
 
@@ -151,7 +164,7 @@ void UI::UI_DisplayHealthBar(unsigned short int current, unsigned short int max)
     {
         printf("-");
     }
-    printf("]%d/%d (%.0f%%)\n", current, max, percent*100);
+    printf("]%hu/%hu (%.0f%%)\n", current, max, percent*100);
 }
 
 void UI::UI_DisplayExperienceBar(unsigned short int current, unsigned short int max)

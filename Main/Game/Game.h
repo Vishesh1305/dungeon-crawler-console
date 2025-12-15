@@ -50,6 +50,16 @@
 #define STARTING_XP 0  // NOLINT(modernize-macro-to-enum)
 
 //--------------------
+// LEVEL UP CONSTANTS
+//--------------------
+
+#define XP_PER_LEVEL 100 // NOLINT(modernize-macro-to-enum)
+#define HP_LEVEL_GAIN 20 // NOLINT(modernize-macro-to-enum)
+#define ATTACK_LEVEL_GAIN 5// NOLINT(modernize-macro-to-enum)
+#define DEFENCE_LEVEL_GAIN 3// NOLINT(modernize-macro-to-enum)
+#define MAX_LEVEL 10// NOLINT(modernize-macro-to-enum)
+
+//--------------------
 // ENUMS
 //--------------------
 
@@ -173,23 +183,23 @@ typedef struct Ability
 typedef struct Player
 {
     char name[MAX_NAME_LENGTH]; // Character creation
-    short health; // InitStats
-    short maxHealth;// InitStats
-    short attack;// InitStats
-    short defense;// InitStats
-    short exp;// InitStats
-    short level;// InitStats
+    unsigned short health; // InitStats
+    unsigned short maxHealth;// InitStats
+    unsigned short attack;// InitStats
+    unsigned short defense;// InitStats
+    unsigned short exp;// InitStats
+    unsigned short level;// InitStats
     int gold;// InitStats
-    short currentRoom; // InitStats
+    unsigned short currentRoom; // InitStats
     PlayerTrait trait; // Character creation
     float goldMultiplier;//PlayerCreate()
     float expMultiplier; //PlayerCreate()
     StatusEffect statusEffect[10]; 
-    short statusEffectCount; //PlayerCreate()
+    unsigned short statusEffectCount; //PlayerCreate()
     Ability unlockedAbilities[MAX_ABILITIES];  // NOLINT(clang-diagnostic-padded)
-    short abilityCount; //PlayerCreate()
+    unsigned short abilityCount; //PlayerCreate()
     bool canCharmEnemies; //PlayerCreate()
-    DifficultyLevel difficulty; // Difficulty select
+    DifficultyLevel difficulty; // Difficulty select NOLINT(clang-diagnostic-padded)
 }Player;
 //Enemy Struct
 
@@ -319,13 +329,16 @@ void GameHandlePauseMenu(GameInstance* game);
 // PLAYER FUNCTIONS
 //--------------------
 Player* PlayerCreate();
-void PlayeFree(Player* player);
+void PlayerFree(Player* player);
 void PlayerInitStats(Player* player);
 void PlayerDisplayStats(Player* player);
 void PlayerDisplayStatusBar(Player* player);
 void PlayerLevelup(Player* player);
 void PlayerDamage(Player* player, unsigned short damage);
 void PlayerHeal(Player* player, unsigned short heal);
+void PlayerApplyTrait(Player* player, PlayerTrait trait);
+void PlayerSelectTrait(Player* player);
+const char* PlayerGetTraitName(PlayerTrait trait);
 
 
 
