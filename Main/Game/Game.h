@@ -275,10 +275,10 @@ typedef struct GameStatistics
     short deathCount;
 }GameStats;
 
-struct GameInstance
+struct GameInstance //NOLINT(clang-diagnostic-padded)
 {
     GameState currentState;
-    Player* player;
+    Player* player; //NOLINT(clang-diagnostic-padded)
     Dungeon* dungeon;
     Inventory* inventory;
     QuestLog* questLog;
@@ -286,7 +286,7 @@ struct GameInstance
     GameStats* stats;
     Enemy enemyList[MAX_ENEMIES];
     short enemyCount;
-    Ability abilityList[MAX_ABILITIES];
+    Ability abilityList[MAX_ABILITIES];  // NOLINT(clang-diagnostic-padded)
     short abilityCount;
     bool isRunning;
 };
@@ -303,4 +303,33 @@ void GameHandleCharacterCreation(GameInstance* game);
 void GameHandleGameDifficultySelection(GameInstance* game);
 void GameHandleGameLoop(GameInstance* game);
 void GameHandlePauseMenu(GameInstance* game);
+
+//--------------------
+// PLAYER FUNCTIONS
+//--------------------
+Player* PlayerCreate();
+void PlayeFree(Player* player);
+void PlayerInitStats(Player* player);
+void PlayerDisplayStats(Player* player);
+void PlayerDisplayStatusBar(Player* player);
+void PlayerLevelup(Player* player);
+void PlayerDamage(Player* player, unsigned short damage);
+void PlayerHeal(Player* player, unsigned short heal);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #endif

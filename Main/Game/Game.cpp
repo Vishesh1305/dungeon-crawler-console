@@ -1,5 +1,5 @@
 ﻿#include "Game.h"
-
+#include "../UI/UI.h"
 //--------------------
 // GAME FUNCTION IMPLEMENTATION
 //--------------------
@@ -49,13 +49,13 @@ void GameRun(GameInstance* game)
         {
         case MAIN_MENU:
             {
-                game->currentState = MAIN_MENU;
+                game->currentState = GameShowMainMenu();
                 break;
             }
         case CHARACTER_CREATION:
             {
                 GameHandleCharacterCreation(game);
-                game->currentState = GameShowMainMenu();
+                game->currentState = DIFFICULTY_SELECT;
                 break;
             }
         case DIFFICULTY_SELECT:
@@ -69,7 +69,7 @@ void GameRun(GameInstance* game)
                 //game->dungeon = DungeonInit();
                 //game->questLog = QuestInit();
                 //game->inventory = CreateInventory();
-                game->player->currentRoom = 0;
+                //game->player->currentRoom = 0;
                 game->currentState = GAME_LOOP;
                 break;
             }
@@ -145,3 +145,49 @@ void GameFree(GameInstance* game)
     free(game);
     game = nullptr;
 }
+
+GameState GameShowMainMenu()
+{
+    CLEAR_SCREEN();
+    UI::UI_PrintHeader("DUNGEON CRAWLER");
+    printf("\n");
+    printf("  1. New Game\n");
+    printf("  2. Load Game\n");
+    printf("  3. Exit\n");
+    printf("\n");
+    UI::UI_PrintDivider();
+    
+    unsigned short choice = UI::UI_GetMenuInput(1, 3);
+    
+    if (choice == 1) return CHARACTER_CREATION;
+    if (choice == 2) return LOAD_GAME;
+    
+    exit(0);   // NOLINT(concurrency-mt-unsafe)
+
+
+}
+
+void GameHandleCharacterCreation(GameInstance* game)
+{
+    printf("Character Creation - TODO\n");
+}
+
+void GameHandleGameDifficultySelection(GameInstance* game)
+{
+    printf("Difficulty Selection - TODO\n");
+    
+}
+
+void GameHandleGameLoop(GameInstance* game)
+{
+    UI::UI_PrintDivider();
+}
+
+void GameHandlePauseMenu(GameInstance* game)
+{
+    printf("Pause Menu - todo\n");
+}
+
+//--------------------
+// PLAYER FUNCTIONS
+//--------------------
