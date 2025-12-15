@@ -62,7 +62,18 @@ void UI::UI_PrintColored(const char* text, const char* color, bool newLine)
 
 void UI::UI_PrintCentered(const char* text)
 {
-    unsigned short padding = (40 - static_cast<unsigned short>(strlen(text))) / 2;
+    if (text == nullptr) return;
+    
+    unsigned short textLen = static_cast<unsigned short>(strlen(text));
+    unsigned short totalWidth = 40;
+    
+    if (textLen >= totalWidth)
+    {
+        printf("%s\n", text);
+        return;
+    }
+    
+    unsigned short padding = (totalWidth - textLen) / 2;
     printf("%*s%s\n", padding, "", text);
 }
 

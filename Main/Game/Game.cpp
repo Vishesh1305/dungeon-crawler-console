@@ -169,7 +169,32 @@ GameState GameShowMainMenu()
 
 void GameHandleCharacterCreation(GameInstance* game)
 {
-    printf("Character Creation - TODO\n");
+    CLEAR_SCREEN();
+    UI::UI_PrintHeader("CHARACTER CREATION");
+    printf("\n");
+    
+    game->player = PlayerCreate();
+    PlayerInitStats(game->player);
+    
+    printf("Welcome to Dungeon Crawler, brave tarnished\n");
+    UI::UI_GetStringInput("Enter Your Name: ", game->player->name, MAX_NAME_LENGTH);
+    UI::UI_TimedPause(500);
+    PlayerSelectTrait(game->player);
+    printf("Follow the instructions below to clear the screen and proceed further");
+    UI::UI_PauseScreen();
+    
+    CLEAR_SCREEN();
+    UI::UI_PrintHeader("CHARACTER CREATED");
+    printf("Name: %s\n", game->player->name);
+    printf("Trait: %s\n", PlayerGetTraitName(game->player->trait));
+    UI::UI_PrintSection("Starting Stats");
+    printf("\n");
+    printf("  Health: %hu\n", game->player->maxHealth);
+    printf("  Attack: %hu\n", game->player->attack);
+    printf("  Defence: %hu\n", game->player->defense);
+    printf("  Gold: %hu\n", game->player->gold);
+    
+    UI::UI_PauseScreen();
 }
 
 void GameHandleGameDifficultySelection(GameInstance* game)
@@ -267,9 +292,8 @@ void PlayerDisplayStatusBar(Player* player)
     UI::UI_PrintDivider();
     printf("%s", RESET);
     
-    printf("%s [LVL: %hu]", player->name, player->level);
+    printf("%s[LVL: %hu]\n", player->name, player->level);
     UI::UI_DisplayHealthBar(player->health, player->maxHealth);
-    printf("| ");
     UI::UI_DisplayExperienceBar(player->exp, XP_PER_LEVEL);
     printf("Gold: %hu\n", player->gold);
     
@@ -340,7 +364,7 @@ void PlayerApplyTrait(Player* player, PlayerTrait trait)
     switch (trait)
     {
     case TRAIT_HEAVY_ARMOUR:
-        player->defense = (unsigned short)(player->defense * 1.3);
+        player->defense = (unsigned short)(player->defense * 1.5);
         player->attack = (unsigned short)(player->attack * 0.9);
         break;
     
@@ -415,7 +439,7 @@ void PlayerSelectTrait(Player* player)
             }
         }
         
-        isConfirmed = UI::UI_ConfirmAction("Confirm this trait? (Y/N)");
+        isConfirmed = UI::UI_ConfirmAction("Confirm this trait?");
         if (isConfirmed == false)
         {
             UI::UI_DisplayInfoMessage("No Worries. Pick again.");
@@ -462,4 +486,3 @@ const char* PlayerGetTraitName(PlayerTrait trait)
     }
 }
 
-/*I just have 5 traits I just noticed that I mentioned 2 extra lol. anyways just letting you know for your future ref.*/
