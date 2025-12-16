@@ -66,7 +66,7 @@
 typedef enum  // NOLINT(performance-enum-size)
 {
     EASY = 0,
-    MEDIUM = 1,
+    NORMAL = 1,
     HARD = 2,
     INSANE = 3,
     
@@ -155,6 +155,13 @@ typedef enum
     COMBAT_ESCAPE = 2,
     
 }CombatResult;
+
+typedef enum
+{
+    GAME_CONTINUE = 0,
+    GAME_WON = 1,
+    GAME_LOST = 2,
+}GameStatus;
 
 //--------------------
 // STRUCTS
@@ -324,6 +331,7 @@ void GameHandleCharacterCreation(GameInstance* game);
 void GameHandleGameDifficultySelection(GameInstance* game);
 void GameHandleGameLoop(GameInstance* game);
 void GameHandlePauseMenu(GameInstance* game);
+GameStatus GameCheckGameStatus(GameInstance* game);
 
 //--------------------
 // PLAYER FUNCTIONS
@@ -340,8 +348,19 @@ void PlayerApplyTrait(Player* player, PlayerTrait trait);
 void PlayerSelectTrait(Player* player);
 const char* PlayerGetTraitName(PlayerTrait trait);
 
+//--------------------
+// DUNGEON FUNCTIONS
+//--------------------
 
-
+Dungeon* DungeonInit();
+void DungeonFree(Dungeon* dungeon);
+void DungeonDisplayRoom(Player* player, Dungeon* dungeon);
+void DungeonDisplayActionMenu();
+void DungeonMoveToRoom(Player* player, Dungeon* dungeon, short direction);
+Direction DungeonGetDirectionInput();
+char* DungeonGetDirectionName(Direction dir);
+void DungeonDisplayMap(Player* player, Dungeon* dungeon);
+EncounterType DungeonGenerateEncounter(unsigned short playerLevel);
 
 
 

@@ -1,7 +1,7 @@
 ﻿#include "Game.h"
 #include "../UI/UI.h"
 //--------------------
-// GAME FUNCTION IMPLEMENTATION
+// GAME FUNCTIONS
 //--------------------
 
 GameInstance* GameInit()
@@ -66,10 +66,10 @@ void GameRun(GameInstance* game)
             }
         case NEW_GAME:
             {
-                //game->dungeon = DungeonInit();
+                game->dungeon = DungeonInit();
                 //game->questLog = QuestInit();
                 //game->inventory = CreateInventory();
-                //game->player->currentRoom = 0;
+                game->player->currentRoom = 0;
                 game->currentState = GAME_LOOP;
                 break;
             }
@@ -92,6 +92,7 @@ void GameRun(GameInstance* game)
             }
         case GAME_OVER:
             {
+                UI::UI_DisplayGameoverScreen(game->player, game->stats);
                 game->isRunning = false;
                 break;
             }
@@ -162,7 +163,8 @@ GameState GameShowMainMenu()
     if (choice == 1) return CHARACTER_CREATION;
     if (choice == 2) return LOAD_GAME;
     
-    exit(0);   // NOLINT(concurrency-mt-unsafe)
+    return GAME_OVER;
+    
 
 
 }
@@ -199,18 +201,167 @@ void GameHandleCharacterCreation(GameInstance* game)
 
 void GameHandleGameDifficultySelection(GameInstance* game)
 {
-    printf("Difficulty Selection - TODO\n");
+    DifficultyLevel selectedDifficulty = {};
+    bool isConfirmed = false;
+    const char* format;
+    while (!isConfirmed)
+    {
+        CLEAR_SCREEN();
+        UI::UI_PrintHeader("SELECT DIFFICULTY");
+        printf("\n");
+        printf("1) Easy - 50%% more health, Weaker enemies.\n");
+        printf("2) Normal - Standard, balanced gameplay.\n");
+        printf("3) Hard - 50%% less health, Stronger enemies.\n");
+        printf("4) Insane - Permadeath, Stronger enemies, +100%% rewards\n\n");
+        
+        unsigned short choice = UI::UI_GetMenuInput(1, 4);
+        
+        switch (choice)
+        {
+        case 1:
+            {
+                selectedDifficulty = EASY;
+                game->player->maxHealth = (unsigned short)(game->player->maxHealth * 1.5);
+                game->player->health = game->player->maxHealth;
+                game->player->defense = (unsigned short)(game->player->defense * 1.35);
+                format = "EASY";
+                break;
+            }
+        case 2:
+            {
+                selectedDifficulty = NORMAL; 
+                format = "NORMAL";
+                break;
+            }
+        case 3:
+            {
+                selectedDifficulty = HARD; 
+                game->player->maxHealth = (unsigned short)(game->player->maxHealth * 0.75);
+                game->player->health = game->player->maxHealth;
+                game->player->defense = (unsigned short)(game->player->defense * 0.8);
+                format = "HARD";
+                break;
+            }
+        case 4:
+            {
+                selectedDifficulty = INSANE;
+                game->player->maxHealth = (unsigned short)(game->player->maxHealth * 0.5);
+                game->player->health = game->player->maxHealth;
+                game->player->defense = (unsigned short)(game->player->defense * 0.7);
+                format = "INSANE";
+                break;
+            }
+        default:
+            {
+                selectedDifficulty = NORMAL; 
+                format = "NORMAL";
+                break;
+            }
+        }
+        
+        isConfirmed = UI::UI_ConfirmAction("Confirm this difficulty?");
+        if (isConfirmed == false)
+        {
+            printf("No Worries. Pick again\n");
+            UI::UI_TimedPause(750);
+        }
+        
+        game->player->difficulty = selectedDifficulty;
+        char message[256];
+        sprintf_s(message, sizeof(message), "Diffculty applied: %s", format); //NOLINT
+        UI::UI_DisplayInfoMessage(message);
+        printf("\n");
+        PlayerDisplayStats(game->player);
+        printf("\n");
+        UI::UI_PauseScreen();
+    }
     
 }
 
 void GameHandleGameLoop(GameInstance* game)
 {
     UI::UI_PrintDivider();
+    
+    // Display Dungeon room here.
+    PlayerDisplayStatusBar(game->player);
+    
+    //Check for boss room here.
+    /*dungeon_display_action_menu()
+    choice = UI::GetCharInput()
+    
+    SWITCH choice
+        CASE '1':
+            direction = UI::GetDirectionInput()
+            dungeon_move_to_room(game.player, direction, game.dungeon)
+            game_handle_encounter(game)
+        
+        CASE '2':
+            CLEAR_SCREEN()
+            player_display_stats(game.player)
+            UI::PauseScreen()
+        
+        CASE '3':
+            CLEAR_SCREEN()
+            inventory_display(game.inventory)
+            UI::PauseScreen()
+        
+        CASE '4':
+            CLEAR_SCREEN()
+            quest_display_log(game.questLog, game.player)
+            UI::PauseScreen()
+        
+        CASE '5':
+            CLEAR_SCREEN()
+            ability_display_list(game.player)
+            UI::PauseScreen()
+        
+        CASE '6':
+            CLEAR_SCREEN()
+            dungeon_display_map(game.player, game.dungeon)
+            UI::PauseScreen()
+        
+        CASE '7':
+            IF file_save_game(game.player, game.inventory, game.questLog, game.stats)
+                UI::DisplaySuccessMessage("Game saved!")
+            ELSE
+                UI::DisplayErrorMessage("Save failed!")
+            ENDIF
+            UI::PauseScreen()
+        
+        CASE '8':
+            game.currentState = PAUSE_MENU
+    END SWITCH
+    
+    IF game.player.experience >= (game.player.level * XP_PER_LEVEL)
+        player_levelup(game.player)
+        ability_check_unlocks(game.player, game)
+    ENDIF
+    
+    quest_check_completion(game.questLog, game.player)*/
+    
 }
 
 void GameHandlePauseMenu(GameInstance* game)
 {
     printf("Pause Menu - todo\n");
+}
+
+GameStatus GameCheckGameStatus(GameInstance* game)
+{
+    if (game == nullptr)
+    {
+        printf("ERROR - GameCheckGameStatus: game is null\n");
+        return GAME_CONTINUE;
+    }
+    if (game->player->level >= MAX_LEVEL && game->player->currentRoom == 19)
+    {
+        return GAME_WON;
+    }
+    if (game->player->health <= 0)
+    {
+        return GAME_LOST;
+    }
+    return GAME_CONTINUE;
 }
 
 //--------------------
@@ -359,7 +510,7 @@ void PlayerApplyTrait(Player* player, PlayerTrait trait)
     if (player == nullptr)
     {
         printf("ERROR - PlayerApplyTrait: Player is null\n");
-        exit(1);
+        return;
     }
     switch (trait)
     {
@@ -486,3 +637,24 @@ const char* PlayerGetTraitName(PlayerTrait trait)
     }
 }
 
+//--------------------
+// DUNGEON FUNCTIONS
+//--------------------
+
+Dungeon* DungeonInit()
+{
+    Dungeon* dungeon = (Dungeon*)malloc(sizeof(Dungeon));
+    if (dungeon == nullptr)
+    {
+        printf("ERROR - Failed to allocate memory for dungeon.\n");
+        return nullptr;
+    }
+    
+    dungeon->totalRooms = MAX_ROOMS;
+    
+    for (short i = 0; i < MAX_ROOMS; i++)
+    {
+        dungeon->rooms[i].roomID = (short)1000 + i;
+    }
+    
+}

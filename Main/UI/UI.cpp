@@ -246,13 +246,22 @@ void UI::UI_DisplayVictoryScreen(Player* player, GameStats* stats)
 
 void UI::UI_DisplayDefeatScreen(Player* player, GameStats* stats)
 {
+    
     CLEAR_SCREEN();
     UI_PrintHeader("DEALT DEFEAT!");
     printf("\n");
     printf("You have been defeated!\n");
-    printf("Final Level: %d\n", player->level);
-    printf("Final Gold: %d\n", player->gold);
-    printf("Enemies Defeated: %d\n", stats->totalEnemiesDefeated);
+    
+    if (player == nullptr && stats != nullptr)
+    {
+        return;
+    }else
+    {
+        printf("Final Level: %d\n", player->level);
+        printf("Final Gold: %d\n", player->gold);
+        printf("Enemies Defeated: %d\n", stats->totalEnemiesDefeated);
+    }
+
 }
 void UI::UI_DisplayGameoverScreen(Player* player, GameStats* stats)
 {
