@@ -67,6 +67,7 @@ void GameRun(GameInstance* game)
         case NEW_GAME:
             {
                 game->dungeon = DungeonInit();
+                DungeonGenerateRooms(game->dungeon);
                 //game->questLog = QuestInit();
                 //game->inventory = CreateInventory();
                 game->player->currentRoom = 0;
