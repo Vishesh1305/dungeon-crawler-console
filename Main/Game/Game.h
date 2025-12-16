@@ -353,18 +353,22 @@ const char* PlayerGetTraitName(PlayerTrait trait);
 //--------------------
 
 Dungeon* DungeonInit();
+void DungeonGenerateRooms(Dungeon* dungeon);
 void DungeonFree(Dungeon* dungeon);
 void DungeonDisplayRoom(Player* player, Dungeon* dungeon);
 void DungeonDisplayActionMenu();
-void DungeonMoveToRoom(Player* player, Dungeon* dungeon, short direction);
+void DungeonMoveToRoom(Player* player, Dungeon* dungeon, Direction direction);
 Direction DungeonGetDirectionInput();
-char* DungeonGetDirectionName(Direction dir);
+const char* DungeonGetDirectionName(Direction dir);
 void DungeonDisplayMap(Player* player, Dungeon* dungeon);
 EncounterType DungeonGenerateEncounter(unsigned short playerLevel);
 
 
+//--------------------
+// UTILITY FUNCTIONS
+//--------------------
 
-
+float RandomFloat(float min, float max);
 
 
 

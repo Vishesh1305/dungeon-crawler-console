@@ -655,6 +655,247 @@ Dungeon* DungeonInit()
     for (short i = 0; i < MAX_ROOMS; i++)
     {
         dungeon->rooms[i].roomID = (short)1000 + i;
+        
+        dungeon->rooms[i].hasShop = false;
+        dungeon->rooms[i].hasBoss = false;
+        dungeon->rooms[i].explored = false;
+        dungeon->rooms[i].encounterType = EMPTY;
+        
+        for (short j = 0; j < 4; j++)
+        {
+            dungeon->rooms[i].connections[j] = -1;
+        }
+        
+        errno_t err = strcpy_s(dungeon->rooms[i].description, sizeof(dungeon->rooms[i].description), "An empty room");
+        if (err!=0)
+        {
+            printf("Failed to copy room description data.\n");
+        }
+    }
+    return dungeon;
+}
+
+void DungeonGenerateRooms(Dungeon* dungeon)
+{
+    if (dungeon == nullptr)
+    {
+        printf("ERROR - Dungeon ptr is null in DungeonGenRooms()\n");
+        return;
+    }
+    const char* roomDescriptions[20] = 
+        {
+        "A dark corridor with stone walls",
+        "A musty chamber filled with cobwebs",
+        "A huge hall with ancient pillars",
+        "A narrow passage with dripping water",
+        "A circular room with mysterious runes",
+        "A dusty library with old tombs",
+        "An armoury with rusty weapons",
+        "A torture chamber with old equipment",
+        "A throne room in ruins",
+        "A chapel with broken statues",
+        "A treasury vault which is empty",
+        "A kitchen with rotting food",
+        "A bedroom with tattered curtains",
+        "A study with scattered papers",
+        "A laboratory with strange equipments",
+        "A prison with empty cells and some skeleton ruins",
+        "A garden overgrown with weeds",
+        "A fountain room with stagnant water",
+        "A war room filled with faded maps",
+        "A crypt with ancient tombs"
+        };
+    for (short i = 0; i < MAX_ROOMS - 1; i++)
+    {
+        errno_t err = strcpy_s(dungeon->rooms[i].description, sizeof(dungeon->rooms[i].description), roomDescriptions[i]);
+        if (err!=0)
+        {
+            printf("Failed to copy room description data.\n");
+        }
+        if (i == 0)
+        {
+            dungeon->rooms[i].encounterType = EMPTY;
+            dungeon->rooms[i].hasShop = false;
+            dungeon->rooms[i].explored = true;
+            continue;
+        }
+        if (i == MAX_ROOMS - 1)
+        {
+            dungeon->rooms[i].encounterType = BOSS;
+            dungeon->rooms[i].hasBoss = true;
+        }
+        float roll = RandomFloat(0.0f, 1.0f);
+        if (roll < 0.40f)
+        {
+            dungeon->rooms[i].encounterType = ENEMY;
+        }
+        else if (roll < 0.60f)
+        {
+            dungeon->rooms[i].encounterType = TREASURE;
+        }
+        else if (roll < 0.75f)
+        {
+            dungeon->rooms[i].encounterType = QUEST;
+        }
+        else if (roll < 0.85f)
+        {
+            dungeon->rooms[i].encounterType = EMPTY;
+            dungeon->rooms[i].hasShop = true;
+        }else
+        {
+            dungeon->rooms[i].encounterType = EMPTY;
+        }
+    }
+}
+
+void DungeonFree(Dungeon* dungeon)
+{
+    if (dungeon != nullptr)
+    {
+        free(dungeon);
+    }
+}
+
+void DungeonDisplayRoom(Player* player, Dungeon* dungeon)
+{
+    if (player == nullptr || dungeon == nullptr)
+    {
+        printf("Failed to display room as either player or dungeon is a nullptr.\n");
+        return;
+    }
+    unsigned short currRoom = player->currentRoom;
+    Room* room = &dungeon->rooms[currRoom];
+    
+    CLEAR_SCREEN();
+    UI::UI_PrintHeader("CURRENT ROOM");
+    printf("\n");
+    printf("Room: %hd: - %s\n", room->roomID, room->description);
+    printf("\n");
+    
+    //Exits
+    UI::UI_PrintSection("Available Exits");
+    bool hasExits = false;
+    for (short i = 0; i < 4; i++)
+    {
+        if (room->connections[i] != -1)
+        {
+            hasExits = true;
+            
+            short connectedRoomIndex = room->connections[i];
+            bool isExplored = dungeon->rooms[connectedRoomIndex].explored;
+            printf("- %s (to room %hd)%s\n", DungeonGetDirectionName((Direction) i), connectedRoomIndex, isExplored ? " (explored)" : "");
+        }
     }
     
+    if (!hasExits)
+    {
+        printf("No Exits are available!\n");
+    }
+    printf("\n");
+    if (room->hasShop)
+    {
+        UI::UI_DisplayInfoMessage("There's a shop in this room!");
+    }
+    
+    if (room->hasBoss)
+    {
+        UI::UI_DisplayWarningMessage("You sense a powerful boss here!");
+    }
+    
+    if (room->encounterType != EMPTY && !room->explored)
+    {
+        UI::UI_DisplayWarningMessage("Something awaits you here...");
+    }
+}
+
+void DungeonDisplayActionMenu()
+{
+    printf("\n");
+    printf("1) Move to another room\n");
+    printf("2) Check Stats\n");
+    printf("3) View Inventory\n");
+    printf("4) View Quests\n");
+    printf("5) View Abilities\n");
+    printf("6) View Map\n");
+    printf("7) Save Game\n");
+    printf("8) Pause Menu\n");
+    printf("\nYour Choice: ");
+}
+
+void DungeonMoveToRoom(Player* player, Dungeon* dungeon, Direction direction)
+{
+    if (player == nullptr || dungeon == nullptr)
+    {
+        printf("Ptrs are null -> Move to another room func.\n");
+        return;
+    }
+    unsigned short currRoom = player->currentRoom;
+    short nextRoom = dungeon->rooms[currRoom].connections[direction];
+    if (nextRoom == -1)
+    {
+        UI::UI_DisplayErrorMessage("You cannot go that way!");
+        UI::UI_TimedPause(1000);
+        return;
+    }
+    player->currentRoom = nextRoom;
+    UI::UI_DisplaySuccessMessage("Moving to next room...");
+    UI::UI_TimedPause(500);
+}
+
+Direction DungeonGetDirectionInput()
+{
+    UI::UI_PrintCentered("Choose Direction:");
+    printf("1) North\n");
+    printf("2) East\n");
+    printf("3) South\n");
+    printf("4) West\n");
+    
+    unsigned short choice = UI::UI_GetMenuInput(1, 4);
+    return Direction(choice - 1);
+}
+
+const char* DungeonGetDirectionName(Direction dir)
+{
+    switch (dir)
+    {
+    case NORTH:
+        {
+            return "North";
+        }
+    case EAST:
+        {
+            return "East";
+        }
+    case SOUTH:
+        {
+            return "South";
+        }
+    case WEST:
+        {
+            return "West";
+        }
+    }
+    return "North";
+}
+
+
+//--------------------
+// UTILITY FUNCTIONS
+//--------------------
+
+float RandomFloat(float min, float max)
+{
+    
+
+    if (min > max)
+    {
+        float temp = min;
+        min = max;
+        max = temp;
+    }
+
+    float r = rand() % 10000; // NOLINT
+    r = r / 10000.0f; 
+
+    return min + r * (max - min);
 }
