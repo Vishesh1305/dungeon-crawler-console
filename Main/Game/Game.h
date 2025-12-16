@@ -167,11 +167,12 @@ typedef enum
 // STRUCTS
 //--------------------
 
-typedef struct StatusEffect
+typedef struct StatusEffect //NOLINT
 {
     StatusEffectType type;
-    int duration;
-    int damagePerItem;
+    unsigned short duration;
+    unsigned short damagePerTurn;
+    short statModifier;
 }StatusEffect;
 
 //
@@ -350,7 +351,8 @@ void PlayerHeal(Player* player, unsigned short heal);
 void PlayerApplyTrait(Player* player, PlayerTrait trait);
 void PlayerSelectTrait(Player* player);
 const char* PlayerGetTraitName(PlayerTrait trait);
-
+void PlayerApplyStatusEffects(Player* player, StatusEffect effect);
+void PlayerUpdateStatusEffects(Player* player);
 //--------------------
 // DUNGEON FUNCTIONS
 //--------------------

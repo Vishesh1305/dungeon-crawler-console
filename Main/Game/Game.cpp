@@ -92,7 +92,19 @@ void GameRun(GameInstance* game)
             }
         case GAME_OVER:
             {
-                UI::UI_DisplayGameoverScreen(game->player, game->stats);
+                GameStatus status = GameCheckGameStatus(game);
+                if (status == GAME_WON)
+                {
+                    UI::UI_DisplayVictoryScreen(game->player, game->stats);
+                }
+                else if (status == GAME_LOST)
+                {
+                    UI::UI_DisplayDefeatScreen(game->player, game->stats);
+                }
+                else
+                {
+                    UI::UI_DisplayGameoverScreen(game->player, game->stats);
+                }
                 game->isRunning = false;
                 break;
             }
@@ -366,9 +378,36 @@ void GameHandleGameLoop(GameInstance* game)
             {
                 printf("Shop menu\n");
             }
+            else
+            {
+                UI::UI_DisplayWarningMessage("There's no shop here, brave adventurer!");
+                UI::UI_TimedPause(1200);
+            }
+            break;
+        }
+    default:
+        {
+            UI::UI_DisplayErrorMessage("Invalid Choice!");
+            UI::UI_TimedPause(500);
+            break;
         }
     }
     
+    if (game->player->exp >= (game->player->level * XP_PER_LEVEL))
+    {
+        PlayerLevelup(game->player);
+        //AbilityCheckUnlocks(game->player, game)
+    }
+    
+    //Check quest completion here...
+    
+    PlayerUpdateStatusEffects(game->player);
+    
+    GameStatus status = GameCheckGameStatus(game);
+    if (status != GAME_CONTINUE)
+    {
+        game->currentState = GAME_OVER;
+    }
 }
 
 void GameHandlePauseMenu(GameInstance* game)
@@ -672,9 +711,174 @@ const char* PlayerGetTraitName(PlayerTrait trait)
     }
 }
 
+void PlayerApplyStatusEffects(Player* player, StatusEffect effect)
+{
+    if (player == nullptr)
+    {
+        return;
+    }
+    
+    if (player->statusEffectCount >= 10)
+    {
+        printf("Cannot apply more status effects (max 10)\n");
+        return;
+    }
+    
+    switch (effect.type)
+    {
+    case FORTIFIED:
+        player->defense += effect.statModifier;
+        printf("%s", GREEN);
+        printf("Defense increased by %hd! (Duration: %d turns)\n", 
+               effect.statModifier, effect.duration);
+        printf("%s", RESET);
+        break;
+        
+    case WEAKENED:
+        player->attack -= effect.statModifier;
+        printf("%s", RED);
+        printf("Attack decreased by %hd! (Duration: %d turns)\n", 
+               effect.statModifier, effect.duration);
+        printf("%s", RESET);
+        break;
+        
+    case POISON:
+        printf("%s", MAGENTA);
+        printf("You've been poisoned! (%d damage per turn for %d turns)\n",
+               effect.damagePerTurn, effect.duration);
+        printf("%s", RESET);
+        break;
+        
+    case BLEED:
+        printf("%s", RED);
+        printf("You're bleeding! (%d damage per turn for %d turns)\n",
+               effect.damagePerTurn, effect.duration);
+        printf("%s", RESET);
+        break;
+        
+    case STUN:
+        printf("%s", YELLOW);
+        printf("You've been stunned! (Cannot act for %d turns)\n", effect.duration);
+        printf("%s", RESET);
+        break;
+    }
+    
+    player->statusEffect[player->statusEffectCount] = effect;
+    player->statusEffectCount++;
+}
+
+void PlayerUpdateStatusEffects(Player* player)
+{
+    if (player == nullptr)
+    {
+        printf("ERROR - PlayerUpdateStatusEffects: Player is null\n");
+        return;
+    }
+    
+    if (player->statusEffectCount == 0)
+    {
+        return;
+    }
+    printf("\n");
+    UI::UI_PrintColored("Status Effects", CYAN, true);
+    printf("%s", RESET);
+    
+    
+    for (unsigned short i = 0; i < player->statusEffectCount - 1; i++)
+    {
+        StatusEffect* effect = &player->statusEffect[i];
+        switch (effect->type)
+        {
+        case POISON:
+            {
+                PlayerDamage(player, effect->damagePerTurn);
+                printf("%s", MAGENTA);
+                printf("💀 Poison deals %d damage! (%d turns left)\n",
+                      effect->damagePerTurn, effect->duration);
+                printf("%s", RESET);
+                break;
+            }
+        case BLEED:
+            {
+                PlayerDamage(player, effect->damagePerTurn);
+                printf("%s", RED);
+                printf("🩸 Bleeding deals %d damage! (%d turns left)\n",
+                      effect->damagePerTurn, effect->duration);
+                printf("%s", RESET);
+                break;
+            }
+        case STUN:
+            {
+                printf("%s", YELLOW);
+                printf("😵 You are stunned! (%d turns left)\n", effect->duration);
+                printf("%s", RESET);
+                break;
+            }
+        case FORTIFIED:
+            {
+                printf("%s", GREEN);
+                printf("🛡️  Fortified! (+%hd defense, %d turns left)\n",
+                      effect->statModifier, effect->duration);
+                printf("%s", RESET);
+                break;
+            }
+        case WEAKENED:
+            {
+                printf("%s", RED);
+                printf("💔 Weakened! (-%hd attack, %d turns left)\n",
+                      effect->statModifier, effect->duration);
+                printf("%s", RESET);
+                break;
+            }
+        }
+        effect->duration--;
+        if (effect->duration <= 0)
+        {
+            switch (effect->type)
+            {
+            case FORTIFIED:
+                {
+                    player->defense -= effect->statModifier;
+                    printf("%s", CYAN);
+                    printf("⚠️  Fortification wore off! (Defense decreased by %hd)\n",
+                          effect->statModifier);
+                    printf("%s", RESET);
+                    break;
+                }
+            case WEAKENED:
+                {
+                    player->attack += effect->statModifier;
+                    printf("%s", CYAN);
+                    printf("⚠️  Weakness wore off! (Attack restored by %hd)\n",
+                          effect->statModifier);
+                    printf("%s", RESET);
+                    break;
+                }
+            case STUN:
+            case BLEED:
+            case POISON:
+                {
+                    printf("%s", CYAN);
+                    printf("⚠️  Status effect wore off!\n");
+                    printf("%s", RESET);
+                    break;
+                }
+            }
+            for (unsigned short j = i; j <player->statusEffectCount - 1; j++)
+            {
+                player->statusEffect[j] = player->statusEffect[j + 1];
+            }
+            player->statusEffectCount--;
+            i--;
+        }
+    }
+    printf("\n");
+}
+
 //--------------------
 // DUNGEON FUNCTIONS
 //--------------------
+
 
 Dungeon* DungeonInit()
 {
