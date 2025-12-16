@@ -280,64 +280,94 @@ void GameHandleGameDifficultySelection(GameInstance* game)
 
 void GameHandleGameLoop(GameInstance* game)
 {
+    if (game == nullptr)
+    {
+        printf("ERROR - GameHandleGameLoop: game is null\n");
+        return;
+    }
     UI::UI_PrintDivider();
     
-    // Display Dungeon room here.
+    DungeonDisplayRoom(game->player, game->dungeon);
     PlayerDisplayStatusBar(game->player);
     
-    //Check for boss room here.
-    /*dungeon_display_action_menu()
-    choice = UI::GetCharInput()
+    unsigned short currentRoom = game->player->currentRoom;
+    if (game->dungeon->rooms[currentRoom].hasBoss)
+    {
+        UI::UI_DisplayWarningMessage("You sense a powerful presence ahead..");
+    }
+    if (game->dungeon->rooms[currentRoom].hasShop)
+    {
+        UI::UI_DisplayInfoMessage("You see a merchant here!");
+        printf("Press 'S' to visit the shop.\n");
+    }
+    DungeonDisplayActionMenu();
+    char choice = UI::UI_GetCharInput();
     
-    SWITCH choice
-        CASE '1':
-            direction = UI::GetDirectionInput()
-            dungeon_move_to_room(game.player, direction, game.dungeon)
-            game_handle_encounter(game)
-        
-        CASE '2':
-            CLEAR_SCREEN()
-            player_display_stats(game.player)
-            UI::PauseScreen()
-        
-        CASE '3':
-            CLEAR_SCREEN()
-            inventory_display(game.inventory)
-            UI::PauseScreen()
-        
-        CASE '4':
-            CLEAR_SCREEN()
-            quest_display_log(game.questLog, game.player)
-            UI::PauseScreen()
-        
-        CASE '5':
-            CLEAR_SCREEN()
-            ability_display_list(game.player)
-            UI::PauseScreen()
-        
-        CASE '6':
-            CLEAR_SCREEN()
-            dungeon_display_map(game.player, game.dungeon)
-            UI::PauseScreen()
-        
-        CASE '7':
-            IF file_save_game(game.player, game.inventory, game.questLog, game.stats)
-                UI::DisplaySuccessMessage("Game saved!")
-            ELSE
-                UI::DisplayErrorMessage("Save failed!")
-            ENDIF
-            UI::PauseScreen()
-        
-        CASE '8':
-            game.currentState = PAUSE_MENU
-    END SWITCH
-    
-    IF game.player.experience >= (game.player.level * XP_PER_LEVEL)
-        player_levelup(game.player)
-        ability_check_unlocks(game.player, game)
-    ENDIF
-    
-    quest_check_completion(game.questLog, game.player)*/
+    switch (choice)
+    {
+    case '1':
+        {
+            Direction direction = UI::UI_GetDirectionInput();
+            DungeonMoveToRoom(game->player, game->dungeon, direction);
+            GameHandleEncounter(game);
+            break;
+        }
+    case '2':
+        {
+            CLEAR_SCREEN();
+            PlayerDisplayStats(game->player);
+            UI::UI_PauseScreen();
+            break;
+        }
+    case '3':
+        {
+            CLEAR_SCREEN();
+            //Inventory access goes here
+            UI::UI_PauseScreen();
+            break;
+        }
+    case '4':
+        {
+            CLEAR_SCREEN();
+            //View Quest Log
+            UI::UI_PauseScreen();
+            break;
+        }
+    case '5':
+        {
+            CLEAR_SCREEN();
+            //View Abilities
+            UI::UI_PauseScreen();
+            break;
+        }
+    case '6':
+        {
+            CLEAR_SCREEN();
+            DungeonDisplayMap(game->player, game->dungeon);
+            UI::UI_PauseScreen();
+            break;
+        }
+    case '7':
+        {
+            CLEAR_SCREEN();
+            //Save file logic goes here
+            UI::UI_PauseScreen();
+            break;
+        }
+    case '8':
+        {
+            game->currentState = PAUSE_MENU;
+            break;
+        }
+    case 's':
+    case 'S':
+        {
+            if (game->dungeon->rooms[currentRoom].hasShop)
+            {
+                printf("Shop menu\n");
+            }
+        }
+    }
     
 }
 
@@ -362,6 +392,11 @@ GameStatus GameCheckGameStatus(GameInstance* game)
         return GAME_LOST;
     }
     return GAME_CONTINUE;
+}
+
+void GameHandleEncounter(GameInstance* game)
+{
+    
 }
 
 //--------------------
@@ -878,10 +913,61 @@ const char* DungeonGetDirectionName(Direction dir)
     return "North";
 }
 
+void DungeonDisplayMap(Player* player, Dungeon* dungeon)
+{
+    if (player == nullptr || dungeon == nullptr)
+    {
+        return;
+    }
+    UI::UI_PrintHeader("DUNGEON MAP");
+    printf("\nLegend: [P]=You | [X]=Explored | [?] = Unknown | [B]=Boss [S]=Shop\n\n");
+    for (short row=0; row < DUNGEON_ROWS - 1; row++)
+    {
+        for (short col=0; col < DUNGEON_COLS - 1; col++)
+        {
+            short index = DungeonGetRoomIndex(row, col);
+            Room* room = &dungeon->rooms[index];
+            if (index == player->currentRoom)
+            {
+                printf("[P]");
+            }
+            else if (room->explored)
+            {
+                if (room->hasBoss)
+                {
+                    printf("[B]");
+                }
+                if (room->hasShop)
+                {
+                    printf("[S]");
+                }
+                else
+                {
+                    printf("[X]");
+                }
+            }else
+            {
+                printf("[?]");
+            }
+            printf(" ");
+        }
+        printf("\n");
+    }
+    printf("\n");
+    printf("Current Position: Room %hd\n", player->currentRoom);
+    printf("Explored: %hd/%hd\n", CountExploredRooms(dungeon), MAX_ROOMS);
+}
+
+
+short DungeonGetRoomIndex(short row, short col)
+{
+    return DUNGEON_ROWS * row + col;
+}
 
 //--------------------
 // UTILITY FUNCTIONS
 //--------------------
+
 
 float RandomFloat(float min, float max)
 {
@@ -898,4 +984,19 @@ float RandomFloat(float min, float max)
     r = r / 10000.0f; 
 
     return min + r * (max - min);
+}
+
+short CountExploredRooms(const Dungeon* dungeon)
+{
+    if (dungeon == nullptr)
+    {
+        return 0;
+    }
+    short count = 0;
+    for (short i = 0; i < MAX_ROOMS; i++)
+    {
+        if (dungeon->rooms[i].explored)
+            count++;
+    }
+    return count;
 }

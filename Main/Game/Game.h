@@ -332,6 +332,9 @@ void GameHandleGameDifficultySelection(GameInstance* game);
 void GameHandleGameLoop(GameInstance* game);
 void GameHandlePauseMenu(GameInstance* game);
 GameStatus GameCheckGameStatus(GameInstance* game);
+void GameHandleEncounter(GameInstance* game);
+void GameInitializeEnemies(GameInstance* game);
+void GameInitializeAbilities(GameInstance* game);
 
 //--------------------
 // PLAYER FUNCTIONS
@@ -361,15 +364,14 @@ void DungeonMoveToRoom(Player* player, Dungeon* dungeon, Direction direction);
 Direction DungeonGetDirectionInput();
 const char* DungeonGetDirectionName(Direction dir);
 void DungeonDisplayMap(Player* player, Dungeon* dungeon);
-EncounterType DungeonGenerateEncounter(unsigned short playerLevel);
-
+short DungeonGetRoomIndex(short row, short col);
 
 //--------------------
 // UTILITY FUNCTIONS
 //--------------------
 
 float RandomFloat(float min, float max);
-
+short CountExploredRooms(const Dungeon* dungeon);
 
 
 
