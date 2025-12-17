@@ -289,22 +289,22 @@ void UI::UI_TimedPause(unsigned short milliseconds)
 
 void UI::UI_DisplaySuccessMessage(const char* message)
 {
-    printf("%s[SUCCESS]%s%s\n", GREEN, RESET, message);
+    printf("%s[SUCCESS]%s %s\n", GREEN, RESET, message);
 }
 
 void UI::UI_DisplayErrorMessage(const char* message)
 {
-    printf("%s[ERROR]%s%s\n", RED, RESET, message);
+    printf("%s[ERROR]%s %s\n", RED, RESET, message);
 }
 
 void UI::UI_DisplayWarningMessage(const char* message)
 {
-    printf("%s[WARNING]%s%s\n", YELLOW, RESET, message);
+    printf("%s[WARNING]%s %s\n", YELLOW, RESET, message);
 }
 
 void UI::UI_DisplayInfoMessage(const char* message)
 {
-    printf("%s[INFO]%s%s\n", CYAN, RESET, message);
+    printf("%s[INFO]%s %s\n", CYAN, RESET, message);
 }
 
 

@@ -1,5 +1,8 @@
 ﻿#include "Game.h"
 #include "../UI/UI.h"
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 //--------------------
 // GAME FUNCTIONS
 //--------------------
@@ -32,7 +35,7 @@ GameInstance* GameInit()
     game->shop = nullptr;
     
     //TODOs here 
-    //Enemy initialization goes here
+    GameInitializeEnemies(game);
     //Ability initialization goes here
     //Game shop init goes here.
     
@@ -68,8 +71,10 @@ void GameRun(GameInstance* game)
             {
                 game->dungeon = DungeonInit();
                 DungeonGenerateRooms(game->dungeon);
+                DungeonGenerateConnections(game->dungeon);
                 //game->questLog = QuestInit();
                 //game->inventory = CreateInventory();
+                game->dungeon->rooms[0].explored = true;
                 game->player->currentRoom = 0;
                 game->currentState = GAME_LOOP;
                 break;
@@ -439,6 +444,106 @@ void GameHandleEncounter(GameInstance* game)
     
 }
 
+void GameInitializeEnemies(GameInstance* game)
+{
+    game->enemyCount = 5;
+    
+    //-----------------
+    // Enemy 0: Goblin 
+    //-----------------
+    game->enemyList[0].enemyID = 0;
+    errno_t err = strcpy_s(game->enemyList[0].name, sizeof(game->enemyList[0].name), "Goblin");
+    if (err != 0)
+    {
+        UI::UI_DisplayErrorMessage("Failed to copy enemy name[0] -> Goblin");
+        printf("\n");
+    }
+    game->enemyList[0].baseHealth = 30;
+    game->enemyList[0].attack = 8;
+    game->enemyList[0].defense = 3;
+    game->enemyList[0].expReward = 20;
+    game->enemyList[0].goldReward = 10;
+    game->enemyList[0].difficulty = 1;
+    game->enemyList[0].lootRarity = COMMON;
+    game->enemyList[0].statusEffectCount = 0;
+    
+    //-----------------
+    // Enemy 1: Skelly
+    //-----------------
+    game->enemyList[1].enemyID = 1;
+    err = strcpy_s(game->enemyList[1].name, sizeof(game->enemyList[1].name), "Skelly");
+    if (err != 0)
+    {
+        UI::UI_DisplayErrorMessage("Failed to copy enemy name[1] -> Skelly");
+        printf("\n");
+    }
+    game->enemyList[1].baseHealth = 40;
+    game->enemyList[1].attack = 12;
+    game->enemyList[1].defense = 5;
+    game->enemyList[1].expReward = 30;
+    game->enemyList[1].goldReward = 15;
+    game->enemyList[1].difficulty = 2;
+    game->enemyList[1].lootRarity = COMMON;
+    game->enemyList[1].statusEffectCount = 0;
+    
+    //-----------------
+    // Enemy 2: Omen
+    //-----------------
+    game->enemyList[2].enemyID = 2;
+    err = strcpy_s(game->enemyList[2].name, sizeof(game->enemyList[2].name), "Omen");
+    if (err != 0)
+    {
+        UI::UI_DisplayErrorMessage("Failed to copy enemy name[2] -> Omen");
+        printf("\n");
+    }
+    game->enemyList[2].baseHealth = 60;
+    game->enemyList[2].attack = 15;
+    game->enemyList[2].defense = 8;
+    game->enemyList[2].expReward = 50;
+    game->enemyList[2].goldReward = 25;
+    game->enemyList[2].difficulty = 3;
+    game->enemyList[2].lootRarity = UNCOMMON;
+    game->enemyList[2].statusEffectCount = 0;
+    
+    //-----------------
+    // Enemy 3: Banished Knight
+    //-----------------
+    game->enemyList[3].enemyID = 3;
+    err = strcpy_s(game->enemyList[3].name, sizeof(game->enemyList[3].name), "Banished Knight");
+    if (err != 0)
+    {
+        UI::UI_DisplayErrorMessage("Failed to copy enemy name[3] -> Banished Knight");
+        printf("\n");
+    }
+    game->enemyList[3].baseHealth = 80;
+    game->enemyList[3].attack = 20;
+    game->enemyList[3].defense = 12;
+    game->enemyList[3].expReward = 80;
+    game->enemyList[3].goldReward = 40;
+    game->enemyList[3].difficulty = 4;
+    game->enemyList[3].lootRarity = RARE;
+    game->enemyList[3].statusEffectCount = 0;
+    
+    //-----------------
+    // Enemy 4: Elden Beast
+    //-----------------
+    game->enemyList[4].enemyID = 4;
+    err = strcpy_s(game->enemyList[4].name, sizeof(game->enemyList[4].name), "Elden Beast");
+    if (err != 0)
+    {
+        UI::UI_DisplayErrorMessage("Failed to copy enemy name[4] -> Elden Beast");
+        printf("\n");
+    }
+    game->enemyList[4].baseHealth = 120;
+    game->enemyList[4].attack = 30;
+    game->enemyList[4].defense = 18;
+    game->enemyList[4].expReward = 150;
+    game->enemyList[4].goldReward = 100;
+    game->enemyList[4].difficulty = 5;
+    game->enemyList[4].lootRarity = LEGENDARY;
+    game->enemyList[4].statusEffectCount = 0;
+}
+
 //--------------------
 // PLAYER FUNCTIONS
 //--------------------
@@ -518,7 +623,7 @@ void PlayerDisplayStatusBar(Player* player)
     UI::UI_PrintDivider();
     printf("%s", RESET);
     
-    printf("%s[LVL: %hu]\n", player->name, player->level);
+    printf("Name: %s | [LVL: %hu]\n", player->name, player->level);
     UI::UI_DisplayHealthBar(player->health, player->maxHealth);
     UI::UI_DisplayExperienceBar(player->exp, XP_PER_LEVEL);
     printf("Gold: %hu\n", player->gold);
@@ -785,7 +890,7 @@ void PlayerUpdateStatusEffects(Player* player)
     printf("%s", RESET);
     
     
-    for (unsigned short i = 0; i < player->statusEffectCount - 1; i++)
+    for (unsigned short i = 0; i < player->statusEffectCount; i++)
     {
         StatusEffect* effect = &player->statusEffect[i];
         switch (effect->type)
@@ -877,6 +982,77 @@ void PlayerUpdateStatusEffects(Player* player)
 }
 
 //--------------------
+// ENEMY FUNCTIONS
+//--------------------
+
+Enemy* EnemyInit(GameInstance* game,short enemyID)
+{
+    if (game == nullptr || enemyID < 0 || enemyID >= game->enemyCount)
+    {
+        printf("ERROR - Invalid enemy ID: %hd\n", enemyID);
+        return nullptr;
+    }
+    
+    Enemy* enemy = (Enemy*)malloc(sizeof(Enemy));
+    if (enemy == nullptr)
+    {
+        printf("Failed to allocate memory for enemy - EnemyINIT()\n");
+        return nullptr;
+    }
+    *enemy = game->enemyList[enemyID];
+    enemy->health = enemy->baseHealth;
+    enemy->statusEffectCount = 0;
+    return enemy;
+}
+
+Enemy* EnemyGenerateForLevel(GameInstance* game, unsigned short playerLevel)
+{
+    if (game == nullptr)
+    {
+        return nullptr;
+    }
+    short suitableEnemies[MAX_ENEMIES];
+    short suitableCount = 0;
+    
+    for (short i=0; i < game->enemyCount; i++)
+    {
+        short enemyDiff = game->enemyList[i].difficulty;
+        
+        if (enemyDiff >= playerLevel - 1 && enemyDiff <= playerLevel + 2)
+        {
+            suitableEnemies[suitableCount] = i;
+            suitableCount++;
+        }
+    }
+    if (suitableCount == 0)
+    {
+        suitableCount = game->enemyCount;
+        for (short i = 0; i < suitableCount; i++)
+            suitableEnemies[i] = i;
+    }
+    short randomIndex = RandomShort(0, (short)suitableCount - 1);
+    short selectedIndex = suitableEnemies[randomIndex];
+    
+    Enemy* enemy = EnemyInit(game, selectedIndex);
+    if (enemy == nullptr)
+    {
+        return nullptr;
+    }
+    
+    float levelDiff = (float)(playerLevel - enemy->difficulty);
+    float levelMultiplier = 1.f + (levelDiff * 0.1f);
+    
+    enemy->baseHealth = (short)(enemy->baseHealth * levelMultiplier);
+    enemy->health = enemy->baseHealth;
+    enemy->attack = (short)(enemy->attack * levelMultiplier);
+    enemy->defense = (short) (enemy->defense * levelMultiplier);
+    enemy->expReward = (short) (enemy->expReward * levelMultiplier);
+    enemy->goldReward = (short) (enemy->goldReward * levelMultiplier);
+    
+    return enemy;
+}
+
+//--------------------
 // DUNGEON FUNCTIONS
 //--------------------
 
@@ -945,7 +1121,7 @@ void DungeonGenerateRooms(Dungeon* dungeon)
         "A war room filled with faded maps",
         "A crypt with ancient tombs"
         };
-    for (short i = 0; i < MAX_ROOMS - 1; i++)
+    for (short i = 0; i < MAX_ROOMS; i++)
     {
         errno_t err = strcpy_s(dungeon->rooms[i].description, sizeof(dungeon->rooms[i].description), roomDescriptions[i]);
         if (err!=0)
@@ -984,6 +1160,41 @@ void DungeonGenerateRooms(Dungeon* dungeon)
         }else
         {
             dungeon->rooms[i].encounterType = EMPTY;
+        }
+    }
+}
+
+void DungeonGenerateConnections(Dungeon* dungeon)
+{
+    if (dungeon == nullptr)
+    {
+        return;
+    }
+    for (short row = 0; row < DUNGEON_ROWS; row++)
+    {
+        for (short col = 0; col < DUNGEON_COLS; col++)
+        {
+            short currentIndex = DungeonGetRoomIndex(row,col);
+            if (row > 0)
+            {
+                short northIndex = DungeonGetRoomIndex((short)row-1,col);
+                dungeon->rooms[currentIndex].connections[NORTH] = northIndex;
+            }
+            if (col < DUNGEON_COLS - 1)
+            {
+                short eastIndex = DungeonGetRoomIndex(row,(short)col + 1);
+                dungeon->rooms[currentIndex].connections[EAST] = eastIndex;
+            }
+            if (row < DUNGEON_ROWS - 1)
+            {
+                short southIndex = DungeonGetRoomIndex((short)row + 1,col);
+                dungeon->rooms[currentIndex].connections[SOUTH] = southIndex;
+            }
+            if (col > 0)
+            {
+                short westIndex = DungeonGetRoomIndex(row,(short)col - 1);
+                dungeon->rooms[currentIndex].connections[WEST] = westIndex;
+            }
         }
     }
 }
@@ -1126,9 +1337,9 @@ void DungeonDisplayMap(Player* player, Dungeon* dungeon)
     }
     UI::UI_PrintHeader("DUNGEON MAP");
     printf("\nLegend: [P]=You | [X]=Explored | [?] = Unknown | [B]=Boss [S]=Shop\n\n");
-    for (short row=0; row < DUNGEON_ROWS - 1; row++)
+    for (short row=0; row < DUNGEON_ROWS; row++)
     {
-        for (short col=0; col < DUNGEON_COLS - 1; col++)
+        for (short col=0; col < DUNGEON_COLS; col++)
         {
             short index = DungeonGetRoomIndex(row, col);
             Room* room = &dungeon->rooms[index];
@@ -1163,16 +1374,20 @@ void DungeonDisplayMap(Player* player, Dungeon* dungeon)
     printf("Explored: %hd/%hd\n", CountExploredRooms(dungeon), MAX_ROOMS);
 }
 
-
 short DungeonGetRoomIndex(short row, short col)
 {
-    return DUNGEON_ROWS * row + col;
+    return DUNGEON_COLS * row + col;
 }
+
+//--------------------
+// COMBAT FUNCTIONS
+//--------------------
+
+
 
 //--------------------
 // UTILITY FUNCTIONS
 //--------------------
-
 
 float RandomFloat(float min, float max)
 {
@@ -1191,6 +1406,17 @@ float RandomFloat(float min, float max)
     return min + r * (max - min);
 }
 
+short RandomShort(short min, short max)
+{
+    if (min > max)
+    {
+        short temp = min;
+        min = max;
+        max = temp;
+    }
+    return (short)min + rand() % (max - min + 1);
+}
+
 short CountExploredRooms(const Dungeon* dungeon)
 {
     if (dungeon == nullptr)
@@ -1205,3 +1431,4 @@ short CountExploredRooms(const Dungeon* dungeon)
     }
     return count;
 }
+

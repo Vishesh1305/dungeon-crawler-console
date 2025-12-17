@@ -1,10 +1,7 @@
 ﻿#ifndef GAME_H
 #define GAME_H
 
-#include <cstdio>
-#include <cstdlib>
-#include <ctime>
-#include <cstring>
+
 
 //--------------------
 // COLOR CODES FOR TERMINAL
@@ -252,11 +249,11 @@ typedef struct Inventory
     short itemCount;
 }Inventory;
 
-typedef struct Room
+typedef struct Room //NOLINT
 {
     short roomID;
     char description[MAX_DESCRIPTION_LENGTH];
-    EncounterType encounterType;
+    EncounterType encounterType; //NOLINT
     short connections[4];
     bool hasShop;
     bool hasBoss;
@@ -340,6 +337,7 @@ void GameInitializeAbilities(GameInstance* game);
 //--------------------
 // PLAYER FUNCTIONS
 //--------------------
+
 Player* PlayerCreate();
 void PlayerFree(Player* player);
 void PlayerInitStats(Player* player);
@@ -353,12 +351,18 @@ void PlayerSelectTrait(Player* player);
 const char* PlayerGetTraitName(PlayerTrait trait);
 void PlayerApplyStatusEffects(Player* player, StatusEffect effect);
 void PlayerUpdateStatusEffects(Player* player);
+
+//--------------------
+// ENEMY FUNCTIONS
+//--------------------
+
+Enemy* EnemyInit(GameInstance* game, short enemyID);
+Enemy* EnemyGenerateForLevel(GameInstance* game, unsigned short playerLevel);
 //--------------------
 // DUNGEON FUNCTIONS
 //--------------------
 
 Dungeon* DungeonInit();
-void DungeonGenerateRooms(Dungeon* dungeon);
 void DungeonFree(Dungeon* dungeon);
 void DungeonDisplayRoom(Player* player, Dungeon* dungeon);
 void DungeonDisplayActionMenu();
@@ -367,12 +371,21 @@ Direction DungeonGetDirectionInput();
 const char* DungeonGetDirectionName(Direction dir);
 void DungeonDisplayMap(Player* player, Dungeon* dungeon);
 short DungeonGetRoomIndex(short row, short col);
+void DungeonGenerateRooms(Dungeon* dungeon);
+void DungeonGenerateConnections(Dungeon* dungeon);
+
+//--------------------
+// COMBAT FUNCTIONS
+//--------------------
+
+CombatResult CombatStart(Player* player, Enemy* enemy, GameInstance game);
 
 //--------------------
 // UTILITY FUNCTIONS
 //--------------------
 
 float RandomFloat(float min, float max);
+short RandomShort(short min, short max);
 short CountExploredRooms(const Dungeon* dungeon);
 
 
