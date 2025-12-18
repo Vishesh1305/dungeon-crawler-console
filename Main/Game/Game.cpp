@@ -121,19 +121,21 @@ void GameRun(GameInstance* game)
             }
         case GAME_OVER:
             {
+                if (game->player == nullptr)
+                {
+                    game->isRunning = false;
+                    break;
+                }
+
                 GameStatus status = GameCheckGameStatus(game);
+
                 if (status == GAME_WON)
-                {
                     UI::UI_DisplayVictoryScreen(game->player, game->stats);
-                }
                 else if (status == GAME_LOST)
-                {
                     UI::UI_DisplayDefeatScreen(game->player, game->stats);
-                }
                 else
-                {
                     UI::UI_DisplayGameoverScreen(game->player, game->stats);
-                }
+
                 game->isRunning = false;
                 break;
             }
