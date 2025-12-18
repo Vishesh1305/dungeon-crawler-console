@@ -1,7 +1,7 @@
 ﻿#ifndef GAME_H
 #define GAME_H
 
-
+#include <cstdio>
 
 //--------------------
 // COLOR CODES FOR TERMINAL
@@ -175,11 +175,11 @@ typedef struct StatusEffect //NOLINT
 //
 typedef struct Ability
 {
-    int abilityId;
+    unsigned short abilityId;
     char name[MAX_NAME_LENGTH];
     char description[MAX_DESCRIPTION_LENGTH];
-    int unlockedAtLevel;
-    float damageMultiplier;
+    unsigned short unlockedAtLevel;
+    float damageMultiplier; //NOLINT
     int cooldown;
     int cooldownRemaining;
 }Ability;
@@ -194,9 +194,9 @@ typedef struct Player
     unsigned short defense;// InitStats
     unsigned short exp;// InitStats
     unsigned short level;// InitStats
-    int gold;// InitStats
+    int gold;// InitStats NOLINT
     unsigned short currentRoom; // InitStats
-    PlayerTrait trait; // Character creation
+    PlayerTrait trait; // Character creation NOLINT
     float goldMultiplier;//PlayerCreate()
     float expMultiplier; //PlayerCreate()
     StatusEffect statusEffect[10]; 
@@ -208,7 +208,7 @@ typedef struct Player
 }Player;
 //Enemy Struct
 
-typedef struct Enemy
+typedef struct Enemy //NOLINT
 {
     short enemyID;
     char name[MAX_NAME_LENGTH];
@@ -219,12 +219,12 @@ typedef struct Enemy
     short expReward;
     short goldReward;
     short difficulty;
-    ItemRarity lootRarity;
+    ItemRarity lootRarity; //NOLINT
     StatusEffect statusEffect[10];
     short statusEffectCount;
 }Enemy;
 //Item struct - data
-typedef struct ItemData
+typedef struct ItemData//NOLINT
 {
     short itemID;
     char name[MAX_NAME_LENGTH];
@@ -243,7 +243,7 @@ typedef struct InventoryNode
     struct InventoryNode* next;
 }InventoryNode;
 
-typedef struct Inventory
+typedef struct Inventory //NOLINT
 {
     InventoryNode* head;
     short itemCount;
@@ -260,7 +260,7 @@ typedef struct Room //NOLINT
     bool explored;
 }Room;
 
-typedef struct Dungeon
+typedef struct Dungeon //NOLINT
 {
     Room rooms[MAX_ROOMS];
     short totalRooms;
@@ -363,12 +363,18 @@ Enemy* EnemyGenerateForLevel(GameInstance* game, unsigned short playerLevel);
 void EnemyDisplayStats(Enemy* enemy);
 bool EnemyIsAlive(Enemy* enemy);
 void EnemyUpdateStatusEffects(Enemy* enemy);
+void EnemyApplyStatusEffect(Enemy* enemy, StatusEffect effect);
 void EnemyDamage(Enemy* enemy, unsigned short damage);
+void EnemyHeal(Enemy* enemy, short heal);
 
 //--------------------
 // ITEM FUNCTIONS
 //--------------------
 
+ItemData ItemCreate(short itemID, const char* name, ItemType type, ItemRarity rarity, short value, short cost);
+void ItemApplyEffect(ItemData* item, Player* player);
+const char* ItemGetTypeName(ItemType type);
+const char* ItemGetRarityName(ItemRarity rarity);
 void ItemDisplay(ItemData* item);
 ItemData ItemGenerateTreasure(unsigned short playerLevel);
 ItemData ItemGenerateRandom(ItemRarity rarity, ItemType type);
@@ -409,9 +415,68 @@ unsigned short CombatCalculateDamage(unsigned short attack, unsigned short defen
 // INVENTORY FUNCTIONS
 //--------------------
 
-bool InventoryIsFull(Inventory* inventory);
+Inventory* InventoryCreate();
+void InventoryFree(Inventory* inventory);
 bool InventoryAddItem(Inventory* inventory, ItemData item);
+bool InventoryRemoveItem(Inventory* inventory, short itemID);
+ItemData* InventoryFindItem(Inventory* inventory, short itemID);
+void InventoryDisplay(Inventory* inventory);
+void InventoryUseItem(Inventory* inventory, Player* player, short itemID);
+bool InventoryIsFull(Inventory* inventory);
+unsigned short InventoryGetTotalValue(Inventory* inventory);
+//--------------------
+// QUEST FUNCTIONS
+//--------------------
 
+QuestLog* QuestInit();
+void QuestFree(QuestLog* questLog);
+void QuestGenerate(QuestLog* questLog, unsigned short playerLevel);
+void QuestDisplay(QuestLog* questLog, Player* player);
+void QuestCheckCompletion(QuestLog* questLog, Player* player, GameInstance* game);
+void QuestUpdateProgress(QuestLog* questLog, QuestObjectiveType type, short amount);
+void QuestAwardReward(QuestLog* questLog, Player* player, short questIndex);
+bool QuestIsComplete(QuestData* quest);
+
+//--------------------
+// ABILITY SYSTEM FUNCTIONS
+//--------------------
+
+void AbilityInitialize(GameInstance* game);
+void AbilityDisplayList(Player* player);
+void AbilityCheckUnlocks(Player* player, GameInstance* game);
+bool AbilityIsUnlocked(Player* player, int abilityId);
+Ability* AbilityGetById(Player* player, int abilityId);
+void AbilityUse(Player* player, Enemy* enemy, Ability* ability, GameInstance* game);
+bool AbilityCanUse(Ability* ability);
+
+//--------------------
+// SHOP FUNCTIONS
+//--------------------
+
+Shop* ShopInit();
+void ShopFree(Shop* shop);
+void ShopGenerateItems(Shop* shop, unsigned short playerLevel);
+void ShopDisplay(Shop* shop);
+bool ShopBuyItem(Shop* shop, Player* player, Inventory* inventory, short itemID);
+bool ShopSellItem(Shop* shop, Player* player, Inventory* inventory, short itemID);
+void ShopMenu(Shop* shop, Player* player, Inventory* inventory);
+
+//--------------------
+// FILE I/O FUNCTIONS
+//--------------------
+
+bool FileSaveGame(Player* player, Inventory* inventory, QuestLog* questLog, GameStatistics* stats, Dungeon* dungeon);
+bool FileLoadGame(Player** player, Inventory** inventory, QuestLog** questLog, GameStatistics** stats, Dungeon** dungeon);
+void FileWritePlayer(FILE* file, Player* player);
+void FileReadPlayer(FILE* file, Player** player);
+void FileWriteInventory(FILE* file, Inventory* inventory);
+void FileReadInventory(FILE* file, Inventory** inventory);
+void FileWriteQuests(FILE* file, QuestLog* questLog);
+void FileReadQuests(FILE* file, QuestLog** questLog);
+void FileWriteStats(FILE* file, GameStatistics* stats);
+void FileReadStats(FILE* file, GameStatistics** stats);
+void FileWriteDungeon(FILE* file, Dungeon* dungeon);
+void FileReadDungeon(FILE* file, Dungeon** dungeon);
 
 //--------------------
 // UTILITY FUNCTIONS
@@ -421,13 +486,5 @@ float RandomFloat(float min, float max);
 short RandomShort(short min, short max);
 bool RandomChance(float prob);
 short CountExploredRooms(const Dungeon* dungeon);
-
-
-
-
-
-
-
-
 
 #endif

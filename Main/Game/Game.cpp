@@ -1,6 +1,5 @@
 ﻿#include "Game.h"
 #include "../UI/UI.h"
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 //--------------------
@@ -1217,11 +1216,45 @@ bool EnemyIsAlive(Enemy* enemy)
 
 void EnemyUpdateStatusEffects(Enemy* enemy)
 {
+    if (enemy == nullptr) return;
     
+    for (short i=0; i < enemy->statusEffectCount; i++)
+    {
+        StatusEffect* effect = &enemy->statusEffect[i];
+        switch (effect->type) //NOLINT
+        {
+        case POISON:
+        case BLEED:
+            {
+                EnemyDamage(enemy, effect->damagePerTurn);
+                char mssg[50];
+                sprintf(mssg, "%s takes %hu damage from %s!\n", enemy->name, effect->damagePerTurn, (effect->type == POISON ? "Poison" : "Bleed")); //NOLINT
+                printf("%s%s%s", CYAN, mssg, RESET);
+                break;
+            }
+        }
+        effect->duration--;
+        if (effect->duration <= 0)
+        {
+            for (short j = i; j < enemy->statusEffectCount - 1; j++)
+                enemy->statusEffect[j] = enemy->statusEffect[j + 1];
+            
+            enemy->statusEffectCount--;
+            i--;
+        }
+    }
 }
+
 void EnemyDamage(Enemy* enemy, short damage)
 {
-    
+    if (enemy == nullptr) return;
+    if (damage >= enemy->health)
+    {
+        enemy->health = 0;
+    }else
+    {
+        enemy->health -= (short)damage;
+    }
 }
 
 
@@ -1717,11 +1750,17 @@ void CombatAwardVictory(Player* player, Enemy* enemy, GameInstance* game)
     }
     printf("\n");
     UI::UI_PauseScreen();
-}
+} // Quest left..
 
 void CombatDisplayMenu(Player* player, Enemy* enemy)
 {
-    
+    UI::UI_PrintDivider();
+    printf("Choose your action:\n");
+    printf("1) Attack.\n");
+    printf("2) Use Ability. [%hu unlocked]\n", player->abilityCount);
+    printf("3) Use Item.\n");
+    printf("4) Attempt Escape.\n");
+    UI::UI_PrintDivider();
 }
 
 void CombatPlayerAttack(Player* player, Enemy* enemy, GameInstance* game)
@@ -1772,18 +1811,45 @@ void CombatUseAbility(Player* player, Enemy* enemy, GameInstance* game)
 }
 void CombatUseItem(Player* player, Enemy* enemy, GameInstance* game)
 {
+    if (player == nullptr || enemy || game == nullptr) return;
     
+    CLEAR_SCREEN();
+    InventoryDisplay(game->inventory);
+    
+    printf("Enter ItemID to use (0 to cancel): > ");
+    short itemID;
+    scanf_s("%hd", &itemID);
+    while (getchar() != '\n');
+    
+    if (itemID == 0)
+        return;
+    InventoryUseItem(game->inventory, player, itemID);
+    UI::UI_TimedPause(1000);
 }
 
 bool CombatAttemptEscape(Player* player)
 {
-    return true;
+    if (player == nullptr) return false;
+    
+    float escapeChance = 0.40f;
+    
+    if (player->trait == TRAIT_QUICK_HANDS)
+        escapeChance += 0.15f;
+    
+    return RandomChance(escapeChance);
 }
 
 void CombatUpdateCooldowns(Player* player)
 {
+    if (player == nullptr) return;
     
+    for (unsigned short i = 0; i < player->abilityCount; i++)
+    {
+        if (player->unlockedAbilities[i].cooldownRemaining > 0)
+            player->unlockedAbilities[i].cooldownRemaining--;
+    }
 }
+
 unsigned short CombatCalculateDamage(unsigned short attack, unsigned short defense, float multiplier)
 {
     float baseDamage = (float) attack * multiplier;
@@ -1805,6 +1871,14 @@ bool InventoryIsFull(Inventory* inventory)
     
 }
 bool InventoryAddItem(Inventory* inventory, ItemData item)
+{
+    
+}
+void InventoryDisplay(Inventory* inventory)
+{
+    
+}
+void InventoryUseItem(Inventory* inventory, Player* player, short itemID)
 {
     
 }
