@@ -278,9 +278,10 @@ typedef struct QuestData  // NOLINT(clang-diagnostic-padded)
     bool completed;
 }Quest;
 
-typedef struct QuestLog
+typedef struct QuestLog //NOLINT
 {
     Quest quests[MAX_QUESTS];
+    short questCount;
 }QuestLog;
 
 typedef struct Shop
@@ -424,6 +425,7 @@ void InventoryDisplay(Inventory* inventory);
 void InventoryUseItem(Inventory* inventory, Player* player, short itemID);
 bool InventoryIsFull(Inventory* inventory);
 unsigned short InventoryGetTotalValue(Inventory* inventory);
+
 //--------------------
 // QUEST FUNCTIONS
 //--------------------
@@ -441,7 +443,6 @@ bool QuestIsComplete(QuestData* quest);
 // ABILITY SYSTEM FUNCTIONS
 //--------------------
 
-void AbilityInitialize(GameInstance* game);
 void AbilityDisplayList(Player* player);
 void AbilityCheckUnlocks(Player* player, GameInstance* game);
 bool AbilityIsUnlocked(Player* player, int abilityId);
