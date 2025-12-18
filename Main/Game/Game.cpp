@@ -83,9 +83,30 @@ void GameRun(GameInstance* game)
             }
         case LOAD_GAME:
             {
-                printf("Game Loaded... testing.\n");
-                game->currentState = GAME_LOOP;
-                
+                if (game->player != nullptr) { free(game->player); game->player = nullptr; }
+                if (game->inventory != nullptr) { InventoryFree(game->inventory); game->inventory = nullptr; }
+                if (game->questLog != nullptr) { free(game->questLog); game->questLog = nullptr; }
+                if (game->stats != nullptr) { free(game->stats); game->stats = nullptr; }
+                if (game->dungeon != nullptr) { free(game->dungeon); game->dungeon = nullptr; }
+
+                Dungeon* d = DungeonInit();
+                if (d != nullptr)
+                {
+                    DungeonGenerateConnections(d);
+                }
+
+                if (FileLoadGame(&game->player, &game->inventory, &game->questLog, (GameStatistics**)&game->stats, &d))
+                {
+                    game->dungeon = d;
+                    game->currentState = GAME_LOOP;
+                }
+                else
+                {
+                    if (d != nullptr) free(d);
+                    UI::UI_DisplayErrorMessage("Failed to load savegame!");
+                    UI::UI_TimedPause(1500);
+                    game->currentState = MAIN_MENU;
+                }
                 break;
             }
         case GAME_LOOP:
@@ -128,7 +149,7 @@ void GameFree(GameInstance* game)
     }
     if (game->player != nullptr)
     {
-        PlayerFree(game->player);
+        //PlayerFree(game->player);
         free(game->player);
         game->player = nullptr;
     }
@@ -1378,7 +1399,8 @@ Player* PlayerCreate()
 
 void PlayerFree(Player* player)
 {
-    
+    if (player == nullptr) return;
+    free(player);
 }
 
 void PlayerInitStats(Player* player)
@@ -2337,6 +2359,9 @@ void DungeonGenerateRooms(Dungeon* dungeon)
         {
             printf("Failed to copy room description data.\n");
         }
+        
+        dungeon->rooms[i].hasShop = false;
+        
         if (i == 0)
         {
             dungeon->rooms[i].encounterType = EMPTY;
@@ -2348,6 +2373,8 @@ void DungeonGenerateRooms(Dungeon* dungeon)
         {
             dungeon->rooms[i].encounterType = BOSS;
             dungeon->rooms[i].hasBoss = true;
+            dungeon->rooms[i].hasShop = false;
+            continue;
         }
         float roll = RandomFloat(0.0f, 1.0f);
         if (roll < 0.40f)
@@ -4014,17 +4041,21 @@ void FileReadPlayer(FILE* file, Player** player)
 void FileWriteInventory(FILE* file, Inventory* inventory)
 {
     if (file == nullptr || inventory == nullptr) return;
-    
+
     fprintf_s(file, "INVENTORY\n");
     fprintf_s(file, "%hd\n", inventory->itemCount);
-    
+
     InventoryNode* current = inventory->head;
     while (current != nullptr)
     {
-        fprintf_s(file, "%hd %s %hd %d %d %hd %hd\n",
-                current->item.itemID, current->item.name, current->item.value,
-                current->item.rarity, current->item.type,
-                current->item.cost, current->item.quantity);
+        fprintf_s(file, "%hd|%s|%hd|%d|%d|%hd|%hd\n",
+            current->item.itemID,
+            current->item.name,
+            current->item.value,
+            (int)current->item.rarity,
+            (int)current->item.type,
+            current->item.cost,
+            current->item.quantity);
         current = current->next;
     }
 }
@@ -4032,28 +4063,38 @@ void FileWriteInventory(FILE* file, Inventory* inventory)
 void FileReadInventory(FILE* file, Inventory** inventory)
 {
     if (file == nullptr) return;
-    
+
     *inventory = InventoryCreate();
     if (*inventory == nullptr) return;
-    
+
     char buffer[256];
     fgets(buffer, 256, file);
-    
-    short itemCount;
+
+    short itemCount = 0;
     fgets(buffer, 256, file);
     sscanf_s(buffer, "%hd", &itemCount);
-    
+
     for (short i = 0; i < itemCount; i++)
     {
-        Item item;
-        int rarity, type;
-        fgets(buffer, 256, file);
-        sscanf_s(buffer, "%hd %49s %hd %d %d %hd %hd",
-               &item.itemID, item.name, (unsigned)sizeof(item.name), &item.value,
-               &rarity, &type, &item.cost, &item.quantity);
+        ItemData item{};
+        int rarity = 0, type = 0;
+
+        if (!fgets(buffer, 256, file)) break;
+
+        sscanf_s(buffer, "%hd|%49[^|]|%hd|%d|%d|%hd|%hd",
+            &item.itemID,
+            item.name, (unsigned)sizeof(item.name),
+            &item.value,
+            &rarity,
+            &type,
+            &item.cost,
+            &item.quantity);
+
         item.rarity = (ItemRarity)rarity;
         item.type = (ItemType)type;
-        strcpy_s(item.description, sizeof(item.description), "Loaded item");
+
+        sprintf_s(item.description, sizeof(item.description), "Loaded item");
+
         InventoryAddItem(*inventory, item);
     }
 }
