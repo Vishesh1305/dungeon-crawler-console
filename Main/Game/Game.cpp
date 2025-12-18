@@ -128,6 +128,7 @@ void GameFree(GameInstance* game)
     }
     if (game->player != nullptr)
     {
+        PlayerFree(game->player);
         free(game->player);
         game->player = nullptr;
     }
@@ -353,7 +354,7 @@ void GameHandleGameLoop(GameInstance* game)
                 {
                     printf("Enter item ID to use: ");
                     short itemID;
-                    scanf("%hd", &itemID);
+                    scanf_s("%hd", &itemID);
                     while (getchar() != '\n') {}
                     InventoryUseItem(game->inventory, game->player, itemID);
                 }
@@ -518,7 +519,7 @@ void GameHandlePauseMenu(GameInstance* game)
                     {
                         printf("Enter item ID to use: ");
                         short itemID;
-                        scanf("%hd", &itemID);
+                        scanf_s("%hd", &itemID);
                         while (getchar() != '\n') {}
                         InventoryUseItem(game->inventory, game->player, itemID);
                     }
@@ -944,7 +945,7 @@ void GameHandleEncounter(GameInstance* game)
                         InventoryDisplay(game->inventory);
                         printf("\nEnter item ID to drop (0 to cancel): ");
                         short dropID;
-                        scanf("%hd", &dropID);
+                        scanf_s("%hd", &dropID);
                         while (getchar() != '\n') {}
                         
                         if (dropID != 0)
@@ -1373,6 +1374,11 @@ Player* PlayerCreate()
     // Every thing else is already set to 0 because of calloc.
     
     return player;
+}
+
+void PlayerFree(Player* player)
+{
+    
 }
 
 void PlayerInitStats(Player* player)
@@ -1936,7 +1942,7 @@ void EnemyUpdateStatusEffects(Enemy* enemy)
             {
                 EnemyDamage(enemy, effect->damagePerTurn);
                 char mssg[50];
-                sprintf(mssg, "%s takes %hu damage from %s!\n", enemy->name, effect->damagePerTurn, (effect->type == POISON ? "Poison" : "Bleed")); //NOLINT
+                sprintf_s(mssg, "%s takes %hu damage from %s!\n", enemy->name, effect->damagePerTurn, (effect->type == POISON ? "Poison" : "Bleed")); //NOLINT
                 printf("%s%s%s", CYAN, mssg, RESET);
                 break;
             }
@@ -1953,7 +1959,8 @@ void EnemyUpdateStatusEffects(Enemy* enemy)
     }
 }
 
-void EnemyDamage(Enemy* enemy, short damage)
+
+void EnemyDamage(Enemy* enemy, unsigned short damage)
 {
     if (enemy == nullptr) return;
     if (damage >= enemy->health)
@@ -1986,17 +1993,17 @@ ItemData ItemCreate(short itemID, const char* name, ItemType type, ItemRarity ra
     {
     case WEAPON:
         {
-            sprintf(item.description, "A weapon that increases attack by %hd.", value);
+            sprintf_s(item.description, "A weapon that increases attack by %hd.", value);
             break;
         }
         case ARMOR:
         {
-            sprintf(item.description, "Armor that increases defense by %hd.", value);
+            sprintf_s(item.description, "Armor that increases defense by %hd.", value);
             break;
         }
     case POTION:
         {
-            sprintf(item.description, "A Potion that increases %hd health.", value);
+            sprintf_s(item.description, "A Potion that increases %hd health.", value);
             break;
         }
     }
@@ -2235,20 +2242,20 @@ ItemData ItemGenerateRandom(ItemRarity rarity, ItemType type)
     {
     case WEAPON:
         {
-            sprintf(item.name, "%s %s", rarityPrefix[rarity], weaponNames[RandomShort(0, 4)]);
-            sprintf(item.description, "A weapon that increases attack by %hd", baseValue);
+            sprintf_s(item.name, "%s %s", rarityPrefix[rarity], weaponNames[RandomShort(0, 4)]);
+            sprintf_s(item.description, "A weapon that increases attack by %hd", baseValue);
             break;
         }
     case ARMOR:
         {
-            sprintf(item.name, "%s %s", rarityPrefix[rarity], armorNames[RandomShort(0, 4)]);
-            sprintf(item.description, "Armor that increases defense by %hd", baseValue);
+            sprintf_s(item.name, "%s %s", rarityPrefix[rarity], armorNames[RandomShort(0, 4)]);
+            sprintf_s(item.description, "Armor that increases defense by %hd", baseValue);
             break;
         }
     case POTION:
         {
-            sprintf(item.name, "%s", potionNames[rarity]);
-            sprintf(item.description, "Restores %hd health", baseValue);
+            sprintf_s(item.name, "%s", potionNames[rarity]);
+            sprintf_s(item.description, "Restores %hd health", baseValue);
             break;
         }
     }
@@ -2774,7 +2781,7 @@ void CombatEnemyAttack(Player* player, Enemy* enemy, GameInstance* game)
     game->stats->totalDamageTaken += damage;
     
     char action[50];
-    sprintf(action, "%s's attack", enemy->name);
+    sprintf_s(action, "%s's attack", enemy->name);
     UI::UI_DisplayCombatAnimation(action, damage, isCritical);
     
     if (player->health <= 0)
@@ -3860,7 +3867,7 @@ void ShopMenu(Shop* shop, Player* player, Inventory* inventory)
                 
                 printf("Enter item number to buy (0 to cancel): ");
                 short itemNum;
-                scanf("%hd", &itemNum);
+                scanf_s("%hd", &itemNum);
                 while (getchar() != '\n') {}
                 
                 if (itemNum > 0 && itemNum <= shop->itemCount)
@@ -3887,7 +3894,7 @@ void ShopMenu(Shop* shop, Player* player, Inventory* inventory)
                 
                 printf("\nEnter item ID to sell (0 to cancel): ");
                 short itemID;
-                scanf("%hd", &itemID);
+                scanf_s("%hd", &itemID);
                 while (getchar() != '\n') {}
                 
                 if (itemID > 0)
