@@ -291,14 +291,14 @@ typedef struct Shop
 
 typedef struct GameStatistics
 {
-    short totalEnemiesDefeated;
-    short totalGoldEarned;
-    short totalDamageDealt;
-    short totalDamageTaken;
-    short itemsCollected;
-    short questsCompleted;
-    short totalPlaytime;
-    short deathCount;
+    unsigned short totalEnemiesDefeated;
+    unsigned short totalGoldEarned;
+    unsigned short totalDamageDealt;
+    unsigned short totalDamageTaken;
+    unsigned short itemsCollected;
+    unsigned short questsCompleted;
+    unsigned short totalPlaytime;
+    unsigned short deathCount;
 }GameStats;
 
 struct GameInstance //NOLINT(clang-diagnostic-padded)
@@ -351,6 +351,8 @@ void PlayerSelectTrait(Player* player);
 const char* PlayerGetTraitName(PlayerTrait trait);
 void PlayerApplyStatusEffects(Player* player, StatusEffect effect);
 void PlayerUpdateStatusEffects(Player* player);
+void PlayerGainExperience(Player* player, unsigned short exp);
+void PlayerGainGold(Player* player, unsigned short gold);
 
 //--------------------
 // ENEMY FUNCTIONS
@@ -358,6 +360,20 @@ void PlayerUpdateStatusEffects(Player* player);
 
 Enemy* EnemyInit(GameInstance* game, short enemyID);
 Enemy* EnemyGenerateForLevel(GameInstance* game, unsigned short playerLevel);
+void EnemyDisplayStats(Enemy* enemy);
+bool EnemyIsAlive(Enemy* enemy);
+void EnemyUpdateStatusEffects(Enemy* enemy);
+void EnemyDamage(Enemy* enemy, unsigned short damage);
+
+//--------------------
+// ITEM FUNCTIONS
+//--------------------
+
+void ItemDisplay(ItemData* item);
+ItemData ItemGenerateTreasure(unsigned short playerLevel);
+ItemData ItemGenerateRandom(ItemRarity rarity, ItemType type);
+
+
 //--------------------
 // DUNGEON FUNCTIONS
 //--------------------
@@ -378,7 +394,24 @@ void DungeonGenerateConnections(Dungeon* dungeon);
 // COMBAT FUNCTIONS
 //--------------------
 
-CombatResult CombatStart(Player* player, Enemy* enemy, GameInstance game);
+CombatResult CombatStart(Player* player, Enemy* enemy, GameInstance* game);
+void CombatAwardVictory(Player* player, Enemy* enemy, GameInstance* game);
+void CombatDisplayMenu(Player* player, Enemy* enemy);
+void CombatPlayerAttack(Player* player, Enemy* enemy, GameInstance* game);
+void CombatEnemyAttack(Player* player, Enemy* enemy, GameInstance* game);
+void CombatUseAbility(Player* player, Enemy* enemy, GameInstance* game);
+void CombatUseItem(Player* player, Enemy* enemy, GameInstance* game);
+bool CombatAttemptEscape(Player* player);
+void CombatUpdateCooldowns(Player* player);
+unsigned short CombatCalculateDamage(unsigned short attack, unsigned short defense, float multiplier);
+
+//--------------------
+// INVENTORY FUNCTIONS
+//--------------------
+
+bool InventoryIsFull(Inventory* inventory);
+bool InventoryAddItem(Inventory* inventory, ItemData item);
+
 
 //--------------------
 // UTILITY FUNCTIONS
@@ -386,6 +419,7 @@ CombatResult CombatStart(Player* player, Enemy* enemy, GameInstance game);
 
 float RandomFloat(float min, float max);
 short RandomShort(short min, short max);
+bool RandomChance(float prob);
 short CountExploredRooms(const Dungeon* dungeon);
 
 

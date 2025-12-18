@@ -441,7 +441,109 @@ GameStatus GameCheckGameStatus(GameInstance* game)
 
 void GameHandleEncounter(GameInstance* game)
 {
+    if (game == nullptr) return;
+    unsigned short currentRoom = game->player->currentRoom;
+    EncounterType en = game->dungeon->rooms[currentRoom].encounterType;
     
+    switch (en)
+    {
+    case EMPTY:
+        {
+            UI::UI_DisplayInfoMessage("This room is empty and quite.");
+            UI::UI_TimedPause(1000);
+            break;
+        }
+    case ENEMY:
+        {
+            Enemy* enemy = EnemyGenerateForLevel(game, game->player->level);
+            if (enemy != nullptr)
+            {
+                CLEAR_SCREEN();
+                UI::UI_DisplayWarningMessage("An enemy appears!");
+                EnemyDisplayStats(enemy);
+                UI::UI_TimedPause(1000);
+                
+                //start Combat
+                CombatResult result = CombatStart(game->player, enemy, game);
+                if (result == COMBAT_VICTORY)
+                {
+                    CombatAwardVictory(game->player, enemy, game);
+                    game->dungeon->rooms[currentRoom].encounterType = EMPTY;
+                }
+                else if (result == COMBAT_DEFEAT)
+                {
+                    game->currentState = GAME_OVER;
+                }
+                else if (result == COMBAT_ESCAPE)
+                {
+                    UI::UI_DisplayWarningMessage("You managed to escape!");
+                }
+                
+                free(enemy);
+            }
+            break;
+        }
+    case TREASURE:
+        {
+            CLEAR_SCREEN();
+            UI::UI_DisplaySuccessMessage("You found a treasure chest!");
+            ItemData treasure = ItemGenerateTreasure(game->player->level);
+            printf("You found: %s\n", treasure.name);
+            ItemDisplay(&treasure);
+            
+            // Inventory Management goes here
+            game->dungeon->rooms[currentRoom].encounterType = EMPTY;
+            break;
+        }
+    case QUEST:
+        {
+            CLEAR_SCREEN();
+            printf("Quest related stuff goes here.\n");
+            break;
+        }
+    case BOSS:
+        {
+            CLEAR_SCREEN();
+            UI::UI_DisplayWarningMessage("=== BOSS FIGHT ===");
+            printf("A powerful boss blocks your path\n");
+            
+            Enemy* boss = EnemyGenerateForLevel(game, game->player->level + 3);
+            if (boss == nullptr)
+            {
+                printf("Failed to allocate boss. Returning. -> GameHandleEncounter()\n");
+                return;
+            }
+            boss->health = (short)(boss->health * 2);
+            boss->baseHealth = boss->health;
+            boss->attack = (short)(boss->attack * 1.5);
+            boss->expReward = (short)(boss->expReward * 3);
+            boss->goldReward = (short)(boss->goldReward * 3);
+            
+            EnemyDisplayStats(boss);
+            UI::UI_TimedPause(1500);
+            
+            CombatResult result = CombatStart(game->player, boss, game);
+            if (result == COMBAT_VICTORY)
+            {
+                CombatAwardVictory(game->player, boss, game);
+                UI::UI_DisplaySuccessMessage("You defeated the boss!");
+                game->dungeon->rooms[currentRoom].encounterType = EMPTY;
+                game->dungeon->rooms[currentRoom].hasBoss = false;
+            }
+            else if (result == COMBAT_DEFEAT)
+            {
+                game->currentState = GAME_OVER;
+            }
+            else if (result == COMBAT_ESCAPE)
+            {
+                UI::UI_DisplayWarningMessage("You barely managed to escape the boss...");
+            }
+            free(boss);
+            UI::UI_PauseScreen();
+            break;
+        }
+    }
+    game->dungeon->rooms[currentRoom].explored = true;
 }
 
 void GameInitializeEnemies(GameInstance* game)
@@ -981,6 +1083,32 @@ void PlayerUpdateStatusEffects(Player* player)
     printf("\n");
 }
 
+void PlayerGainExperience(Player* player, unsigned short exp)
+{
+    if (player == nullptr) return;
+    
+    unsigned short adjustedExp = (unsigned short)(exp * player->expMultiplier);
+    player->exp += adjustedExp;
+    
+    printf("%s", GREEN);
+    printf("Gained %hu Experience!", adjustedExp);
+    printf("%s", RESET);
+    printf("[%hu/%hu]", player->exp, XP_PER_LEVEL);
+}
+
+void PlayerGainGold(Player* player, unsigned short gold)
+{
+    if (player == nullptr) return;
+    
+    unsigned short adjustedGold = (unsigned short)(gold * player->goldMultiplier);
+    player->gold += adjustedGold;
+    
+    printf("%s", YELLOW);
+    printf("Gained %hu Gold!", adjustedGold);
+    printf("%s", RESET);
+    printf("[Total: %hu]\n", player->gold);
+}
+
 //--------------------
 // ENEMY FUNCTIONS
 //--------------------
@@ -1052,6 +1180,69 @@ Enemy* EnemyGenerateForLevel(GameInstance* game, unsigned short playerLevel)
     return enemy;
 }
 
+void EnemyDisplayStats(Enemy* enemy)
+{
+    UI::UI_PrintDivider();
+    if (enemy == nullptr)
+    {
+        printf("Pointer to enemy is a nullptr - EnemyDisplayStats()\n");
+        return;
+    }
+    UI::UI_PrintSection(enemy->name);
+    printf("Health: [%hd/%hd]\n", enemy->health, enemy->baseHealth);
+    
+    //Combat stats
+    printf("Attack: %hd\n", enemy->attack);
+    printf("Defense %hd\n", enemy->defense);
+    
+    //diff
+    printf("Difficulty: %hd\n", enemy->difficulty);
+    if (enemy->statusEffectCount > 0)
+    {
+        printf("Status Effects: %hd active\n", enemy->statusEffectCount);
+    }
+    UI::UI_PrintDivider();
+    
+}
+
+bool EnemyIsAlive(Enemy* enemy)
+{
+    if (enemy == nullptr)
+    {
+        return false;
+    }
+    
+    return enemy->health > 0;
+}
+
+void EnemyUpdateStatusEffects(Enemy* enemy)
+{
+    
+}
+void EnemyDamage(Enemy* enemy, short damage)
+{
+    
+}
+
+
+//--------------------
+// ITEM FUNCTIONS
+//--------------------
+
+void ItemDisplay(ItemData* item)
+{
+    
+}
+
+ItemData ItemGenerateTreasure(unsigned short playerLevel)
+{
+    
+}
+
+ItemData ItemGenerateRandom(ItemRarity rarity, ItemType type)
+{
+    
+}
 //--------------------
 // DUNGEON FUNCTIONS
 //--------------------
@@ -1383,7 +1574,240 @@ short DungeonGetRoomIndex(short row, short col)
 // COMBAT FUNCTIONS
 //--------------------
 
+CombatResult CombatStart(Player* player, Enemy* enemy, GameInstance* game)
+{
+    if (player == nullptr || enemy == nullptr || game == nullptr) return COMBAT_DEFEAT;
+    
+    bool combatActive = true;
+    CombatResult result = COMBAT_DEFEAT;
+    while (combatActive)
+    {
+        CLEAR_SCREEN();
+        UI::UI_PrintHeader("COMBAT");
+        
+        UI::UI_PrintSection("YOU");
+        PlayerDisplayStatusBar(player);
+        printf("\n");
+        
+        UI::UI_PrintSection("ENEMY");
+        EnemyDisplayStats(enemy);
+        printf("\n");
+        
+        CombatDisplayMenu(player, enemy);
+        unsigned short choice = UI::UI_GetMenuInput(1, 4);
+        switch (choice)
+        {
+        case 1:
+            {
+                CombatPlayerAttack(player, enemy, game);
+                break;
+            }
+        case 2:
+            {
+                if (player->abilityCount > 0)
+                {
+                    CombatUseAbility(player, enemy, game);
+                }
+                else
+                {
+                    UI::UI_DisplayErrorMessage("No abilities unlocked yet!");
+                    UI::UI_TimedPause(1000);
+                    continue;
+                }
+                break;
+            }
+        case 3:
+            {
+                if (game->inventory != nullptr && game->inventory->itemCount > 0)
+                {
+                    CombatUseItem(player, enemy, game);
+                }else
+                {
+                    UI::UI_DisplayErrorMessage("No items in the inventory!");
+                    UI::UI_TimedPause(1000);
+                    continue;
+                }
+                break;
+            }
+        case 4:
+            {
+                if (CombatAttemptEscape(player) == true)
+                {
+                    UI::UI_DisplaySuccessMessage("Escaped Successfully!");
+                    UI::UI_TimedPause(1000);
+                    result = COMBAT_ESCAPE;
+                    combatActive = false;
+                    continue;
+                }
+                else
+                {
+                    UI::UI_DisplayErrorMessage("Failed to escape!");
+                    UI::UI_TimedPause(1000);
+                }
+                break;
+            }
+        default:
+            {
+                UI::UI_DisplayWarningMessage("Invalid choice!");
+                UI::UI_TimedPause(500);
+                continue;
+            }
+        }
+        if (!EnemyIsAlive(enemy))
+        {
+            result = COMBAT_VICTORY;
+            combatActive = false;
+            continue;
+        }
+        
+        UI::UI_PrintSection("Enemy's Turn");
+        UI::UI_TimedPause(500);
+        CombatEnemyAttack(player, enemy, game);
+        UI::UI_TimedPause(1000);
+        
+        if (player->health <= 0)
+        {
+            result = COMBAT_DEFEAT;
+            combatActive = false;
+            continue;
+        }
+        PlayerUpdateStatusEffects(player);
+        EnemyUpdateStatusEffects(enemy);
+        
+        CombatUpdateCooldowns(player);
+        UI::UI_PauseScreen();
+    }
+    return result;
+}
 
+void CombatAwardVictory(Player* player, Enemy* enemy, GameInstance* game)
+{
+    if (player == nullptr || enemy == nullptr || game == nullptr) return;
+    
+    CLEAR_SCREEN();
+    UI::UI_PrintHeader("VICTORY");
+    printf("\n");
+    
+    PlayerGainExperience(player, enemy->expReward);
+    PlayerGainGold(player, enemy->goldReward);
+    
+    game->stats->totalEnemiesDefeated++;
+    game->stats->totalGoldEarned += enemy->goldReward;
+    
+    //QuestUpdateProgress(game->questLog, KILL_ENEMIES, 1);
+    
+    if (RandomChance(0.30f))
+    {
+        printf("\n");
+        ItemData loot = ItemGenerateRandom(enemy->lootRarity, (ItemType)RandomShort(0,2));
+        printf("%s dropped: %s\n", enemy->name, loot.name);
+        
+        if (!InventoryIsFull(game->inventory))
+        {
+            if (InventoryAddItem(game->inventory, loot))
+            {
+                UI::UI_DisplaySuccessMessage("Item added to inventory!");
+                game->stats->itemsCollected++;
+            }
+        }
+        else
+        {
+            UI::UI_DisplayWarningMessage("Inventory full! Item left behind.");
+        }
+    }
+    printf("\n");
+    UI::UI_PauseScreen();
+}
+
+void CombatDisplayMenu(Player* player, Enemy* enemy)
+{
+    
+}
+
+void CombatPlayerAttack(Player* player, Enemy* enemy, GameInstance* game)
+{
+    if (player == nullptr || enemy == nullptr || game == nullptr) return;
+    
+    bool isCritical = RandomChance(0.15f);
+    float multiplier = isCritical ? 2.0f : 1.0f;
+    
+    unsigned short damage = CombatCalculateDamage(player->attack, enemy->defense, multiplier);
+    
+    EnemyDamage(enemy, damage);
+    
+    game->stats->totalDamageDealt += damage;
+    
+    UI::UI_DisplayCombatAnimation("Your attack", damage, isCritical);
+    
+    if (!EnemyIsAlive(enemy))
+    {
+        UI::UI_DisplaySuccessMessage("Enemy Defeated!");
+    }
+}
+
+void CombatEnemyAttack(Player* player, Enemy* enemy, GameInstance* game)
+{
+    if (player == nullptr || enemy == nullptr || game == nullptr) return;
+    
+    bool isCritical = RandomChance(0.10f);
+    float multiplier = isCritical ? 1.5f : 1.0f;
+    unsigned short damage = CombatCalculateDamage(enemy->attack, player->defense, multiplier);
+    
+    PlayerDamage(player, damage);
+    game->stats->totalDamageTaken += damage;
+    
+    char action[50];
+    sprintf(action, "%s's attack", enemy->name);
+    UI::UI_DisplayCombatAnimation(action, damage, isCritical);
+    
+    if (player->health <= 0)
+    {
+        UI::UI_DisplayErrorMessage("You have been defeated!");
+    }
+}
+
+void CombatUseAbility(Player* player, Enemy* enemy, GameInstance* game)
+{
+    
+}
+void CombatUseItem(Player* player, Enemy* enemy, GameInstance* game)
+{
+    
+}
+
+bool CombatAttemptEscape(Player* player)
+{
+    return true;
+}
+
+void CombatUpdateCooldowns(Player* player)
+{
+    
+}
+unsigned short CombatCalculateDamage(unsigned short attack, unsigned short defense, float multiplier)
+{
+    float baseDamage = (float) attack * multiplier;
+    float reduction = (float) defense * 0.5f;
+    float finalDamage = baseDamage - reduction;
+    
+    if (finalDamage < 1.0f)
+        finalDamage = 1.0f;
+    
+    return (unsigned short)finalDamage;
+}
+
+//--------------------
+// INVENTORY FUNCTIONS
+//--------------------
+
+bool InventoryIsFull(Inventory* inventory)
+{
+    
+}
+bool InventoryAddItem(Inventory* inventory, ItemData item)
+{
+    
+}
 
 //--------------------
 // UTILITY FUNCTIONS
@@ -1415,6 +1839,15 @@ short RandomShort(short min, short max)
         max = temp;
     }
     return (short)min + rand() % (max - min + 1);
+}
+
+bool RandomChance(float prob)
+{
+    if (prob <= 0.0f)
+        return false;
+    if (prob >= 1.0f)
+        return true;
+    return RandomFloat(0.0f, 1.0f) < prob;
 }
 
 short CountExploredRooms(const Dungeon* dungeon)
