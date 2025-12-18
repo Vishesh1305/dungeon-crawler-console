@@ -67,6 +67,8 @@ void GameRun(GameInstance* game)
             }
         case NEW_GAME:
             {
+                UI::UI_DisplayInfoMessage("Generating Dungeon...");
+                UI::UI_DisplayLoadingBar();
                 game->dungeon = DungeonInit();
                 DungeonGenerateRooms(game->dungeon);
                 DungeonGenerateConnections(game->dungeon);
@@ -83,6 +85,8 @@ void GameRun(GameInstance* game)
             }
         case LOAD_GAME:
             {
+                UI::UI_DisplayInfoMessage("Loading Saved Data..");
+                UI::UI_DisplayLoadingBar();
                 if (game->player != nullptr) { free(game->player); game->player = nullptr; }
                 if (game->inventory != nullptr) { InventoryFree(game->inventory); game->inventory = nullptr; }
                 if (game->questLog != nullptr) { free(game->questLog); game->questLog = nullptr; }
@@ -445,6 +449,8 @@ void GameHandleGameLoop(GameInstance* game)
                 {
                     game->shop = ShopInit();
                 }
+                UI::UI_DisplayInfoMessage("The merchant rummages through goods...");
+                UI::UI_DisplayLoadingBar();
                 ShopGenerateItems(game->shop, game->player->level);
                 ShopMenu(game->shop, game->player, game->inventory);
             }
@@ -1110,6 +1116,8 @@ void GameHandleEncounter(GameInstance* game)
             UI::UI_TimedPause(2000);
             
             // Boss fight
+            UI::UI_DisplayWarningMessage("A powerful presence approaches...");
+            UI::UI_DisplayLoadingBar();
             CombatResult result = CombatStart(game->player, boss, game);
             
             switch (result)
