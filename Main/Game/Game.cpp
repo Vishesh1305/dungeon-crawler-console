@@ -1862,9 +1862,39 @@ unsigned short CombatCalculateDamage(unsigned short attack, unsigned short defen
     return (unsigned short)finalDamage;
 }
 
+
 //--------------------
 // INVENTORY FUNCTIONS
 //--------------------
+
+Inventory* InventoryCreate()
+{
+    Inventory* inventory = (Inventory*)malloc(sizeof(Inventory));
+    if (inventory == nullptr)
+    {
+        printf("Failed to allocate memory for Inventory.\n");
+        return nullptr;
+    }
+    inventory->head = nullptr;
+    inventory->itemCount = 0;
+    return inventory;
+}
+
+void InventoryFree(Inventory* inventory)
+{
+    if (inventory == nullptr)
+    {
+        return;
+    }
+    InventoryNode* current = inventory->head;
+    while (current != nullptr)
+    {
+        InventoryNode* next = current->next;
+        free(current);
+        current = next;
+    }
+    free(inventory);
+}
 
 bool InventoryIsFull(Inventory* inventory)
 {
