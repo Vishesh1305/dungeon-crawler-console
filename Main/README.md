@@ -1,17 +1,16 @@
-﻿# 🏰 Dungeon Crawler — Console (Pure C)
+﻿#Dungeon Crawler — Console (Pure C)
 
 A text-based **ASCII dungeon crawler** built as a final project, written in **C-style code** and compiled with **MSVC** using **JetBrains Rider**.  
 The project focuses on clean architecture, safe input handling, and readable console UI design.
 
 ---
 
-## ✨ Features
+## Features
 
-- 🧱 ASCII-based UI (headers, dividers, centered text)
-- 🎮 Menu-driven gameplay with validated input
-- 🧠 Clear separation of **UI** and **Game Logic**
-- 🛡️ Safe input handling (`scanf_s`, buffer clearing)
-- ⚙️ MSVC-compatible (Windows)
+- ASCII-based UI (headers, dividers, centered text)
+- Menu-driven gameplay with validated input
+- Clear separation of **UI** and **Game Logic**
+- MSVC-compatible (Windows)
 
 ---
 
