@@ -14,6 +14,15 @@ The project focuses on clean architecture, safe input handling, and readable con
 
 ---
 
+## Assignment Context
+This project was originally developed as a first-term final assignment
+for an Introduction to Computer Programming course.
+
+The original assignment brief is included in the `docs/` folder
+for reference.
+
+---
+
 ## 🗂️ Project Structure
 
 ```text
