@@ -27,6 +27,8 @@ for reference.
 
 ```text
 Final Project/
+├── Docs
+│   └── Final Project_ Dungeon Crawler.pdf   # Instructions
 ├── Main/
 │   └── Main.cpp        # Program entry point
 ├── Game/
