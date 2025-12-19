@@ -93,14 +93,45 @@ void GameRun(GameInstance* game)
                 if (game->stats != nullptr) { free(game->stats); game->stats = nullptr; }
                 if (game->dungeon != nullptr) { free(game->dungeon); game->dungeon = nullptr; }
 
-                Dungeon* d = DungeonInit();
-                if (d != nullptr)
-                {
-                    DungeonGenerateConnections(d);
-                }
+                Dungeon* d = nullptr;
+
 
                 if (FileLoadGame(&game->player, &game->inventory, &game->questLog, (GameStatistics**)&game->stats, &d))
                 {
+                    if (d != nullptr)
+                    {
+                        DungeonGenerateConnections(d);
+                        // ADD THIS: Regenerate room descriptions
+                        const char* roomDescriptions[20] = {
+                            "A dark corridor with stone walls",
+                            "A musty chamber filled with cobwebs",
+                            "A huge hall with ancient pillars",
+                            "A narrow passage with dripping water",
+                            "A circular room with mysterious runes",
+                            "A dusty library with old tombs",
+                            "An armoury with rusty weapons",
+                            "A torture chamber with old equipment",
+                            "A throne room in ruins",
+                            "A chapel with broken statues",
+                            "A treasury vault which is empty",
+                            "A kitchen with rotting food",
+                            "A bedroom with tattered curtains",
+                            "A study with scattered papers",
+                            "A laboratory with strange equipments",
+                            "A prison with empty cells and some skeleton ruins",
+                            "A garden overgrown with weeds",
+                            "A fountain room with stagnant water",
+                            "A war room filled with faded maps",
+                            "A crypt with ancient tombs"
+                        };
+        
+                        for (short i = 0; i < d->totalRooms; i++)
+                        {
+                            strcpy_s(d->rooms[i].description, 
+                                     sizeof(d->rooms[i].description), 
+                                     roomDescriptions[i % 20]);
+                        }
+                    }
                     game->dungeon = d;
                     game->currentState = GAME_LOOP;
                 }
@@ -2364,7 +2395,7 @@ void DungeonGenerateRooms(Dungeon* dungeon)
         };
     for (short i = 0; i < MAX_ROOMS; i++)
     {
-        errno_t err = strcpy_s(dungeon->rooms[i].description, sizeof(dungeon->rooms[i].description), roomDescriptions[i]);
+        errno_t err = strcpy_s(dungeon->rooms[i].description, sizeof(dungeon->rooms[i].description), roomDescriptions[i % 20]);
         if (err!=0)
         {
             printf("Failed to copy room description data.\n");
@@ -2387,19 +2418,19 @@ void DungeonGenerateRooms(Dungeon* dungeon)
             continue;
         }
         float roll = RandomFloat(0.0f, 1.0f);
-        if (roll < 0.40f)
+        if (roll < 0.70f)
         {
             dungeon->rooms[i].encounterType = ENEMY;
         }
-        else if (roll < 0.60f)
+        else if (roll < 0.80f)
         {
             dungeon->rooms[i].encounterType = TREASURE;
         }
-        else if (roll < 0.75f)
+        else if (roll < 0.85f)
         {
             dungeon->rooms[i].encounterType = QUEST;
         }
-        else if (roll < 0.85f)
+        else if (roll < 0.93f)
         {
             dungeon->rooms[i].encounterType = EMPTY;
             dungeon->rooms[i].hasShop = true;
@@ -2416,6 +2447,14 @@ void DungeonGenerateConnections(Dungeon* dungeon)
     {
         return;
     }
+    for (short i = 0; i < MAX_ROOMS; i++)
+    {
+        for (short j = 0; j < 4; j++)
+        {
+            dungeon->rooms[i].connections[j] = -1;
+        }
+    }
+    
     for (short row = 0; row < DUNGEON_ROWS; row++)
     {
         for (short col = 0; col < DUNGEON_COLS; col++)

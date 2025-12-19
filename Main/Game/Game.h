@@ -29,12 +29,12 @@
 #define MAX_DESCRIPTION_LENGTH 200 // NOLINT(modernize-macro-to-enum)
 #define MAX_STRING_LENGTH 256 // NOLINT(modernize-macro-to-enum)
 #define MAX_ABILITIES 15 // NOLINT(modernize-macro-to-enum)
-#define MAX_ROOMS 20 // NOLINT(modernize-macro-to-enum)
+#define MAX_ROOMS 35 // NOLINT(modernize-macro-to-enum)
 #define MAX_QUESTS 20 // NOLINT(modernize-macro-to-enum)
 #define MAX_INVENTORY 50 // NOLINT(modernize-macro-to-enum)
 #define MAX_ENEMIES 10 // NOLINT(modernize-macro-to-enum)
-#define DUNGEON_ROWS 5 // NOLINT(modernize-macro-to-enum)
-#define DUNGEON_COLS 4 // NOLINT(modernize-macro-to-enum)
+#define DUNGEON_ROWS 7 // NOLINT(modernize-macro-to-enum)
+#define DUNGEON_COLS 5 // NOLINT(modernize-macro-to-enum)
 
 //--------------------
 // PLAYER STARTING STATS
