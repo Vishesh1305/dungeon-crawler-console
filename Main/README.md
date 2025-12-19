@@ -1,4 +1,4 @@
-﻿#Dungeon Crawler — Console (Pure C)
+﻿##Dungeon Crawler — Console (Pure C)
 
 A text-based **ASCII dungeon crawler** built as a final project, written in **C-style code** and compiled with **MSVC** using **JetBrains Rider**.  
 The project focuses on clean architecture, safe input handling, and readable console UI design.
